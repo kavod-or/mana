@@ -50,6 +50,10 @@ a:focus-visible {
   display: none !important;
 }
 
+.day-panel [tabindex="-1"]:focus {
+  outline: none;
+}
+
 .site-shell {
   width: min(100% - 2rem, 72rem);
   margin: 0 auto;

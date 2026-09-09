@@ -1,4 +1,8 @@
 (() => {
+  if (performance.getEntriesByType("navigation")[0]?.type === "reload" && location.hash) {
+    history.replaceState(history.state, "", location.pathname + location.search);
+  }
+
   const root = document.documentElement;
   const languageButtons = [...document.querySelectorAll("[data-language]")];
   const languageContent = [...document.querySelectorAll("[data-lang-content]")];
