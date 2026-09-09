@@ -1,0 +1,145 @@
+:root.girly-vibes {
+  --cream: #ffd1f2;
+  --paper: #fff0fc;
+  --green: #a00083;
+  --green-soft: #f4b6ff;
+  --terracotta: #ac006f;
+  --ink: #51004b;
+  --muted: #80316e;
+  --line: #e68bcc;
+  --shadow: 0 1rem 3rem #ed35b955;
+}
+
+.girly-message { display: none; }
+.girly-vibes .girly-message {
+  display: block;
+  margin: 1rem auto;
+  padding: 0.8rem 1rem;
+  width: fit-content;
+  max-width: 100%;
+  border: 2px solid white;
+  border-radius: 999px;
+  color: white;
+  background: linear-gradient(110deg, #be007d, #8b20bf);
+  box-shadow: 0 0 0 5px #ff91dc, 0 8px 25px #d9008544;
+  font-size: clamp(1rem, 4vw, 1.5rem);
+  font-weight: 800;
+  text-align: center;
+}
+.girly-vibes .girly-message::before { content: '🎀 '; }
+.girly-vibes .girly-message::after { content: ' ✨'; }
+
+.girly-vibes body {
+  background:
+    radial-gradient(circle, #ffffffaa 1.5px, transparent 2px) 0 0 / 24px 24px,
+    linear-gradient(135deg, #ffc0ec, #ead0ff 45%, #ff9edb);
+}
+.girly-vibes .brand-logo { filter: hue-rotate(165deg) saturate(2); }
+.girly-vibes .site-header { border-bottom: 2px solid #ed72c7; }
+.girly-vibes .focus-card {
+  background: linear-gradient(135deg, #b00078, #8a1fba 60%, #ba0079);
+  border: 2px solid white;
+  box-shadow: 0 0 0 4px #ff91dc, var(--shadow);
+}
+.girly-vibes .focus-subtitle,
+.girly-vibes .focus-dish p,
+.girly-vibes .focus-topline,
+.girly-vibes .tags span { color: #ffe8fb; }
+.girly-vibes .tags i,
+.girly-vibes .live-dot,
+.girly-vibes .availability-mark { background: #ffbedf; box-shadow: 0 0 12px #ffbdec; }
+.girly-vibes .always-card,
+.girly-vibes .food-truck-card { border: 2px solid #ef91d7; background: #fff0fc; box-shadow: var(--shadow); }
+.girly-vibes .day-switcher button[aria-pressed='true'],
+.girly-vibes .language-switch button[aria-pressed='true'] { background: #a00083; }
+.girly-vibes .timeline-dishes > div { background: #ffedfa; }
+.girly-vibes .sold-out { background: #ffddf2; color: #9a005e; }
+
+/* Two lightweight glitter layers sit behind the menu, never over its controls. */
+.girly-vibes body {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(135deg, #ff9edb, #f3bcff 35%, #ff75c8 70%, #ffd0ef);
+}
+
+.girly-vibes .site-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.girly-vibes body::before,
+.girly-vibes body::after {
+  content: '';
+  position: fixed;
+  inset: -240px 0 0;
+  z-index: 0;
+  pointer-events: none;
+  background-repeat: repeat;
+  will-change: transform;
+}
+
+.girly-vibes body::before {
+  background-image:
+    radial-gradient(ellipse 2px 7px at 24px 34px, #fff 70%, transparent 100%),
+    radial-gradient(ellipse 7px 2px at 24px 34px, #fff 70%, transparent 100%),
+    radial-gradient(circle at 94px 112px, #ffd86b 0 2px, transparent 3px),
+    radial-gradient(circle at 160px 65px, #fff5fc 0 2px, transparent 4px),
+    radial-gradient(circle at 52px 188px, #f72ca4 0 3px, transparent 4px);
+  background-size: 200px 240px;
+  animation: girly-glitter-fall 9s linear infinite;
+  opacity: 0.85;
+}
+
+.girly-vibes body::after {
+  background-image:
+    radial-gradient(ellipse 2px 6px at 130px 150px, #fff7b8 70%, transparent 100%),
+    radial-gradient(ellipse 6px 2px at 130px 150px, #fff7b8 70%, transparent 100%),
+    radial-gradient(circle at 42px 80px, #fff 0 1.5px, transparent 3px),
+    radial-gradient(circle at 185px 220px, #c45aff 0 2px, transparent 3px);
+  background-size: 220px 240px;
+  animation: girly-glitter-fall 14s linear infinite;
+  opacity: 0.75;
+}
+
+@keyframes girly-glitter-fall {
+  from { transform: translateY(0); }
+  to { transform: translateY(240px); }
+}
+
+.girly-vibes .girly-message {
+  border: 3px solid #fff;
+  background: linear-gradient(100deg, #cb007e, #9c17c4, #d0008b);
+  text-shadow: 0 2px 0 #790052;
+  box-shadow: 0 0 0 5px #ff75d1, 0 0 0 8px #ffcfef, 0 10px 35px #e0009255;
+  letter-spacing: 0.03em;
+}
+
+.girly-vibes .site-header { border-bottom-style: dashed; }
+.girly-vibes .focus-card {
+  background: linear-gradient(145deg, #ca007e, #971caf 55%, #d30083);
+  box-shadow: 0 0 0 4px #ff75d1, 0 0 0 7px #ffe2f4, 0 15px 40px #ca007e44;
+}
+.girly-vibes .always-card,
+.girly-vibes .food-truck-card {
+  background: linear-gradient(145deg, #fff5fc, #ffe0f5);
+  border: 2px solid #ff81cd;
+  box-shadow: inset 0 0 0 4px #fff8fd, 0 10px 30px #d82aaa33;
+}
+.girly-vibes .topic-nav a {
+  background: linear-gradient(120deg, #ffdcf5, #ebccff);
+  border: 1px solid #e080c1;
+  box-shadow: 0 3px 0 #dc8acb;
+}
+.girly-vibes .topic-nav a:hover { color: #710056; background: #ffc2ec; }
+.girly-vibes .day-switcher button[aria-pressed='true'] {
+  background: linear-gradient(120deg, #c00079, #9816aa);
+  box-shadow: 0 3px 12px #c0007944;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .girly-vibes body::before,
+  .girly-vibes body::after {
+    animation: none;
+    will-change: auto;
+  }
+}

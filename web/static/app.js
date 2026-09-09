@@ -144,3 +144,59 @@
     }
   });
 })();
+
+// A deliberate logo hold reveals the optional theme; no theme asset loads first.
+(() => {
+  const logo = document.querySelector('.brand');
+  if (!logo) return;
+  let timer;
+  let held = false;
+  let theme;
+  let loading = false;
+  let origin;
+  const cancel = () => { clearTimeout(timer); timer = null; };
+  function reveal() {
+    held = true;
+    if (loading) return;
+    if (theme) {
+      document.documentElement.classList.toggle('girly-vibes');
+      return;
+    }
+    loading = true;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/static/girly.css?v=2';
+    link.onload = () => {
+      loading = false;
+      theme = link;
+      const message = document.createElement('p');
+      message.className = 'girly-message';
+      message.textContent = 'For the girly vibes';
+      message.setAttribute('role', 'status');
+      document.querySelector('.site-header').after(message);
+      document.documentElement.classList.add('girly-vibes');
+    };
+    link.onerror = () => { loading = false; link.remove(); };
+    document.head.append(link);
+  }
+  logo.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    cancel(); held = false;
+    origin = {x: event.clientX, y: event.clientY};
+    timer = setTimeout(reveal, 3000);
+  });
+  logo.addEventListener('pointermove', (event) => {
+    if (origin && Math.hypot(event.clientX - origin.x, event.clientY - origin.y) > 12) cancel();
+  });
+  ['pointerup', 'pointercancel', 'pointerleave', 'blur', 'dragstart'].forEach((type) => logo.addEventListener(type, cancel));
+  logo.addEventListener('keydown', (event) => {
+    if (event.key !== ' ' || event.repeat) return;
+    event.preventDefault(); cancel(); held = false;
+    timer = setTimeout(reveal, 3000);
+  });
+  logo.addEventListener('keyup', cancel);
+  logo.addEventListener('click', (event) => {
+    if (held) { event.preventDefault(); held = false; }
+  });
+  logo.addEventListener('contextmenu', (event) => { if (timer || held) event.preventDefault(); });
+})();
