@@ -441,6 +441,22 @@ footer {
   text-align: center;
 }
 
+.github-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: 0.5rem auto 0;
+  border-radius: 50%;
+  color: inherit;
+}
+
+.github-link:hover {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
 @media (max-width: 52rem) {
   .overview-grid,
   .schedule {
