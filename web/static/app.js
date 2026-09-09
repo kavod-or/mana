@@ -152,6 +152,9 @@
   let timer;
   let held = false;
   let theme;
+  let stageStop;
+  let stageClicks = 0;
+  let stageLoading = false;
   let loading = false;
   let origin;
   const cancel = () => { clearTimeout(timer); timer = null; };
@@ -160,19 +163,34 @@
     if (loading) return;
     if (theme) {
       document.documentElement.classList.toggle('girly-vibes');
+      stageClicks = 0;
+      if (stageStop) stageStop();
       return;
     }
     loading = true;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/static/girly.css?v=2';
+    link.href = '/static/girly.css?v=7';
     link.onload = () => {
       loading = false;
       theme = link;
-      const message = document.createElement('p');
+      const message = document.createElement('button');
+      message.type = 'button';
       message.className = 'girly-message';
       message.textContent = 'For the girly vibes';
-      message.setAttribute('role', 'status');
+      message.addEventListener('click', async () => {
+        if (!document.documentElement.classList.contains('girly-vibes') || stageLoading || ++stageClicks < 5) return;
+        stageClicks = 0;
+        stageLoading = true;
+        try {
+          const {startHearts} = await import('/static/hearts.js?v=3');
+          if (document.documentElement.classList.contains('girly-vibes')) stageStop = startHearts();
+        } catch {
+          // The optional effect can be retried without interrupting the menu.
+        } finally {
+          stageLoading = false;
+        }
+      });
       document.querySelector('.site-header').after(message);
       document.documentElement.classList.add('girly-vibes');
     };

@@ -66,7 +66,7 @@ func New(events map[string]menu.Loader, templates fs.FS, static fs.FS, logger *s
 // source maps, or configuration files accidentally placed in the static folder.
 func (s *server) asset(writer http.ResponseWriter, request *http.Request) {
 	switch request.URL.Path {
-	case "/static/girly.css", "/static/manna.js", "/static/app.js", "/static/styles.css", "/static/logo.png", "/static/favicon.png":
+	case "/static/hearts.js", "/static/girly.css", "/static/manna.js", "/static/app.js", "/static/styles.css", "/static/logo.png", "/static/favicon.png":
 		cacheStatic(s.static).ServeHTTP(writer, request)
 	default:
 		writer.Header().Set("Cache-Control", "no-store")
