@@ -30,3 +30,41 @@ test('conference clock selects days and meals, while preserving manual selection
   assert.equal(panels[0].hidden, false);
   assert.equal(panels[0].meals[2].hidden, false);
 });
+
+test('only reload clears fragments; navigation and topic clicks preserve them', () => {
+  for (const navigationType of ['navigate', 'reload', 'back_forward']) {
+    const location = {pathname: '/example-conference', search: '?lang=en', hash: '#trucks-0'};
+    const state = {example: true};
+    let scrolled = 0;
+    let hashchange;
+    const panel = {dataset: {dayPanel: '0'}};
+    const target = {closest: () => panel, scrollIntoView: () => {scrolled++;}};
+    const history = {state, replaceState(nextState, title, url) {
+      assert.equal(nextState, state);
+      assert.equal(url, '/example-conference?lang=en');
+      location.hash = '';
+    }};
+    const document = {
+      documentElement: {lang: 'en'}, body: {dataset: {timezone: 'Europe/Berlin'}},
+      querySelectorAll: () => [],
+      querySelector: (selector) => ['.brand', '.app-version'].includes(selector) ? null : {setAttribute() {}},
+      getElementById: (id) => id === 'trucks-0' ? target : null,
+      addEventListener() {},
+    };
+    vm.runInNewContext(fs.readFileSync('web/static/app.js', 'utf8'), {
+      document, location, history, Intl, navigator: {languages: ['en']},
+      performance: {getEntriesByType: () => [{type: navigationType}]},
+      window: {addEventListener(type, callback) {if (type === 'hashchange') hashchange = callback;}},
+      setInterval() {},
+    });
+    assert.equal(location.hash, navigationType === 'reload' ? '' : '#trucks-0');
+    assert.equal(scrolled, navigationType === 'reload' ? 0 : 1);
+    for (let click = 0; click < 2; click++) {
+      location.hash = '#trucks-0';
+      const before = scrolled;
+      hashchange();
+      assert.equal(scrolled, before + 1);
+      assert.equal(location.hash, '#trucks-0');
+    }
+  }
+});
