@@ -2,6 +2,8 @@
 # Omit price (or use null) to hide it; price: 0 displays zero.
 # Add sold_out: true to any meal or item to show Ausverkauft / Sold out.
 conference:
+  # All serving times below use this timezone.
+  timezone: Europe/Berlin
   name:
     de: Beispiel Konferenz
     en: Example Conference
@@ -87,8 +89,10 @@ permanent:
         de: Salzgebäck
         en: Savoury snacks
 
+# Example dates start on 8 September 2026; update them for your event.
+# The current/next service is featured using its from/until times.
 days:
-  - date: "2026-10-12"
+  - date: "2026-09-08"
     food_trucks:
       - id: pita_stop
         name: {de: Pita-Pause, en: The Pita Stop}
@@ -178,7 +182,7 @@ days:
               en: Pomegranate · creamy hummus · tabbouleh · warm flatbread
             tags: [vegetarian]
 
-  - date: "2026-10-13"
+  - date: "2026-09-09"
     food_trucks:
       - id: taco_garden
         name: {de: Taco-Garten, en: Taco Garden}
@@ -259,7 +263,7 @@ days:
               en: Lemon glaze · soft sponge · fresh grapes
             tags: [vegetarian]
 
-  - date: "2026-10-14"
+  - date: "2026-09-10"
     services:
       - id: lunch
         price: 12.50

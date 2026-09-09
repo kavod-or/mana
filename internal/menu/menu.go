@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"time"
+	_ "time/tzdata"
 
 	"gopkg.in/yaml.v3"
 )
@@ -22,6 +23,7 @@ type Config struct {
 }
 
 type Conference struct {
+	TimeZone string    `yaml:"timezone"`
 	Name     Localized `yaml:"name"`
 	Location Localized `yaml:"location"`
 }
@@ -94,6 +96,10 @@ func Decode(reader io.Reader) (Config, error) {
 }
 
 func (config Config) Validate() error {
+	if _, err := time.LoadLocation(config.Conference.Zone()); err != nil {
+		return fmt.Errorf("conference.timezone: %w", err)
+	}
+
 	if err := validateLocalized("conference.name", config.Conference.Name); err != nil {
 		return err
 	}
@@ -250,4 +256,11 @@ func validatePrices(path string, single, normal, large *Price) error {
 		return fmt.Errorf("%s: use either price or price_normal/price_large", path)
 	}
 	return nil
+}
+
+func (conference Conference) Zone() string {
+	if conference.TimeZone == "" {
+		return "Europe/Berlin"
+	}
+	return conference.TimeZone
 }

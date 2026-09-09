@@ -130,3 +130,9 @@ The item stays visible with an **Ausverkauft / Sold out** badge in place of its 
 Run `make dev` to rebuild and restart when Go, HTML, CSS, JavaScript, or YAML changes. This uses Air from the separate `dev.mod` / `dev.sum` module files (Go 1.26+), while the application module remains on Go 1.24. Refresh the browser to see changes.
 
 Air is development-only: Docker excludes its module files and local build outputs, builds only the application, and copies only the Mana binary into the final runtime image. The container starts Mana directly.
+
+## Automatic day and featured meal
+
+`conference.timezone` sets the conference clock (default: `Europe/Berlin`). The page selects today, the next configured day if today has no menu, or the final day after the conference. The featured meal is the currently running service, then the next upcoming service, or the final service once the day ends. Future days show their first meal; past days show their last. Overlapping services feature the one that started most recently. Sold-out services remain visible with their badge.
+
+The clock updates every 15 seconds and when returning to the tab. Selecting a day or opening a topic link keeps that day selected until reload; its featured meal still updates. Without JavaScript, the first day and first meal remain the fallback.

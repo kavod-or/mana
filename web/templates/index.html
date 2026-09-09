@@ -7,10 +7,10 @@
   <meta name="description" content="Mana - The menu plan">
   <title>Mana · AWFK 2026</title>
   <link rel="icon" href="/static/favicon.png?v=2" type="image/png" sizes="64x64">
-  <link rel="stylesheet" href="/static/styles.css?v=12">
-  <script src="/static/app.js?v=4" defer></script>
+  <link rel="stylesheet" href="/static/styles.css?v=13">
+  <script src="/static/app.js?v=5" defer></script>
 </head>
-<body>
+<body data-timezone="{{.Conference.Zone}}">
   <div class="site-shell">
     <header class="site-header">
       <a class="brand" href="/" aria-label="Mana Startseite">
@@ -53,9 +53,10 @@
         {{if or $.Permanent.Coffee $.Permanent.Drinks $.Permanent.Snacks}}<a href="#refreshments-{{$dayIndex}}"><span data-lang-content="de">Getränke &amp; Snacks</span><span data-lang-content="en" hidden>Drinks &amp; Snacks</span></a>{{end}}
         <a href="#schedule-{{$dayIndex}}"><span data-lang-content="de">Tagesplan</span><span data-lang-content="en" hidden>Schedule</span></a>
       </nav>
-      {{with index $day.Services 0}}
       <section class="overview-grid">
-        <article class="focus-card" id="meals-{{$dayIndex}}" tabindex="-1">
+        <div class="featured-meals" id="meals-{{$dayIndex}}" tabindex="-1">
+        {{range $serviceIndex, $service := $day.Services}}
+        <article class="focus-card" data-featured-from="{{.From}}" data-featured-until="{{.Until}}" {{if ne $serviceIndex 0}}hidden{{end}}>
           <div class="focus-topline">
             <span class="live-dot" aria-hidden="true"></span>
             <span data-lang-content="de">Im Fokus</span>
@@ -97,6 +98,8 @@
             {{end}}
           </div>
         </article>
+        {{end}}
+        </div>
 
         <div class="side-column">
           {{if $day.FoodTrucks}}
@@ -179,7 +182,6 @@
         {{end}}
         </div>
       </section>
-      {{end}}
 
       <section id="schedule-{{$dayIndex}}" tabindex="-1" class="schedule" aria-labelledby="schedule-title-{{$dayIndex}}">
         <div class="section-heading">
