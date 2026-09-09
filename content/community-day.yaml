@@ -2,6 +2,8 @@
 # Omit price (or use null) to hide it; price: 0 displays zero.
 # Add sold_out: true to any meal or item to show Ausverkauft / Sold out.
 conference:
+  # Optional payment notice (requires both languages):
+  # payment: {de: Kartenzahlung möglich, en: Card payment accepted}
   # All serving times below use this timezone.
   timezone: Europe/Berlin
   name:
@@ -95,6 +97,7 @@ days:
   - date: "2026-09-08"
     food_trucks:
       - id: pita_stop
+        payment: {de: Nur Barzahlung, en: Cash only}
         name: {de: Pita-Pause, en: The Pita Stop}
         description:
           de: Frisch gebackene Pita mit knusprigen Falafeln, Hummus und knackigem Salat.
@@ -103,6 +106,7 @@ days:
         from: "11:30"
         until: "15:00"
       - id: pizza_van
+        payment: {de: Kartenzahlung möglich, en: Card payment accepted}
         name: {de: Die rollende Pizzeria, en: The Rolling Pizzeria}
         description:
           de: Steinofenpizza mit Tomate und Mozzarella oder Pilzen und frischem Rucola.
@@ -185,6 +189,7 @@ days:
   - date: "2026-09-09"
     food_trucks:
       - id: taco_garden
+        payment: {de: Bar- und Kartenzahlung, en: Cash and card accepted}
         name: {de: Taco-Garten, en: Taco Garden}
         description:
           de: Warme Maistortillas mit geröstetem Blumenkohl, schwarzen Bohnen und Limettensalsa.

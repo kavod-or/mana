@@ -244,3 +244,39 @@ func TestStoreServesCachedMenuDuringReload(t *testing.T) {
 		t.Fatalf("cached reload: %v, %v", config, err)
 	}
 }
+
+func TestPaymentNoticeValidation(t *testing.T) {
+	for _, tc := range []struct {
+		payment string
+		valid   bool
+	}{
+		{"{de: Nur Barzahlung, en: Cash only}", true},
+		{"{de: Kartenzahlung, en: Card payment}", true},
+		{"{}", true}, {"null", true},
+		{"{de: Nur Barzahlung}", false},
+		{"{de: '   ', en: Cash only}", false},
+	} {
+		t.Run(tc.payment, func(t *testing.T) {
+			source := strings.Replace(validMenu, "conference:", "conference:\n  payment: "+tc.payment, 1)
+			_, err := Decode(strings.NewReader(source))
+			if (err == nil) != tc.valid {
+				t.Fatalf("valid = %v, error = %v", tc.valid, err)
+			}
+		})
+	}
+}
+
+func TestFoodTruckPaymentValidation(t *testing.T) {
+	for _, payment := range []Localized{{}, {DE: "Nur Barzahlung", EN: "Cash only"}, {EN: "Card payment"}, {DE: "   ", EN: "Cash only"}} {
+		config, err := Decode(strings.NewReader(validMenu))
+		if err != nil {
+			t.Fatal(err)
+		}
+		config.Days[0].FoodTrucks = []FoodTruck{{ID: "truck", Name: Localized{DE: "Truck", EN: "Truck"}, Description: Localized{DE: "Essen", EN: "Food"}, Location: Localized{DE: "Hof", EN: "Yard"}, From: "12:00", Until: "14:00", Payment: payment}}
+		err = config.Validate()
+		valid := payment == (Localized{}) || payment.DE == "Nur Barzahlung"
+		if (err == nil) != valid {
+			t.Fatalf("payment %v: %v", payment, err)
+		}
+	}
+}

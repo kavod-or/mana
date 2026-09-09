@@ -7,7 +7,7 @@
   <meta name="description" content="Mana - The menu plan">
   <title>Mana · {{.Conference.Name.DE}}</title>
   <link rel="icon" href="/static/favicon.png?v=2" type="image/png" sizes="64x64">
-  <link rel="stylesheet" href="/static/styles.css?v=18">
+  <link rel="stylesheet" href="/static/styles.css?v=19">
   <script src="/static/app.js?v=14" defer></script>
 </head>
 <body data-timezone="{{.Conference.Zone}}">
@@ -35,6 +35,7 @@
         <span data-lang-content="de">{{.Conference.Name.DE}}</span>
         <span data-lang-content="en" hidden>{{.Conference.Name.EN}}</span>
       </p>
+      {{template "payment" .Conference.Payment}}
     </section>
 
     <nav class="day-switcher" aria-label="Konferenztage">
@@ -115,6 +116,7 @@
                 <h3><span data-lang-content="de">{{.Name.DE}}</span><span data-lang-content="en" hidden>{{.Name.EN}}</span></h3>
                 <p><span data-lang-content="de">{{.Description.DE}}</span><span data-lang-content="en" hidden>{{.Description.EN}}</span></p>
                 <p class="food-truck-location"><span data-lang-content="de">Standort: {{.Location.DE}}</span><span data-lang-content="en" hidden>Location: {{.Location.EN}}</span></p>
+                {{template "payment" .Payment}}
               </article>
               {{end}}
             </div>
@@ -235,3 +237,12 @@
 {{define "prices"}}{{if or .PriceNormal .PriceLarge}}<span class="size-prices">{{if .PriceNormal}}<span class="size-price"><span data-lang-content="de">Normal</span><span data-lang-content="en" hidden>Regular</span>{{template "price" .PriceNormal}}</span>{{end}}{{if .PriceLarge}}<span class="size-price"><span data-lang-content="de">Groß</span><span data-lang-content="en" hidden>Large</span>{{template "price" .PriceLarge}}</span>{{end}}</span>{{else}}{{template "price" .Price}}{{end}}{{end}}
 
 {{define "availability"}}{{if .SoldOut}}<span class="sold-out"><span data-lang-content="de">Ausverkauft</span><span data-lang-content="en" hidden>Sold out</span></span>{{else}}{{template "prices" .}}{{end}}{{end}}
+
+{{define "payment"}}
+{{if or .DE .EN}}
+<p class="payment-notice">
+  <span data-lang-content="de">{{.DE}}</span>
+  <span data-lang-content="en" hidden>{{.EN}}</span>
+</p>
+{{end}}
+{{end}}

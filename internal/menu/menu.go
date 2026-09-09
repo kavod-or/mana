@@ -23,6 +23,7 @@ type Config struct {
 }
 
 type Conference struct {
+	Payment  Localized `yaml:"payment"`
 	TimeZone string    `yaml:"timezone"`
 	Name     Localized `yaml:"name"`
 	Location Localized `yaml:"location"`
@@ -41,6 +42,7 @@ type Day struct {
 }
 
 type FoodTruck struct {
+	Payment     Localized `yaml:"payment"`
 	ID          string    `yaml:"id"`
 	Name        Localized `yaml:"name"`
 	Description Localized `yaml:"description"`
@@ -106,6 +108,9 @@ func (config Config) Validate() error {
 	if err := validateLocalized("conference.location", config.Conference.Location); err != nil {
 		return err
 	}
+	if err := validatePayment("conference.payment", config.Conference.Payment); err != nil {
+		return err
+	}
 	for id, label := range config.Tags {
 		if id == "" {
 			return fmt.Errorf("tag ID is required")
@@ -153,6 +158,9 @@ func (config Config) Validate() error {
 				return fmt.Errorf("%s.id must be non-empty and unique within the day", path)
 			}
 			seenTrucks[truck.ID] = true
+			if err := validatePayment(path+".payment", truck.Payment); err != nil {
+				return err
+			}
 			for _, field := range []struct {
 				name  string
 				value Localized
@@ -228,6 +236,13 @@ func (config Config) validateItem(path string, item Item) error {
 		}
 	}
 	return nil
+}
+
+func validatePayment(path string, value Localized) error {
+	if value.DE == "" && value.EN == "" {
+		return nil
+	}
+	return validateLocalized(path, value)
 }
 
 func validateLocalized(path string, value Localized) error {

@@ -157,3 +157,28 @@ Each menu uses the same conference, days, food trucks, and refreshments format. 
 Event URLs are intentionally public and require no login or access token. Anyone who knows, guesses, or receives an event URL can open its menu directly. The QR code provides a convenient link; scanning it is not required for access. The root page does not list events.
 
 `make dev` and Docker Compose use `CONTENT_DIR` to read external files. Menu edits reload independently, retaining each event's last valid menu on invalid edits. Restart the app after changing `events.yaml` to add, remove, or rename event paths. `MENU_PATH` has been replaced by `CONTENT_DIR`.
+
+## Payment information
+
+Add an optional bilingual `payment` notice under `conference` in an event's menu:
+
+```yaml
+conference:
+  payment:
+    de: Nur Barzahlung
+    en: Cash only
+  # Keep the existing name, location, and timezone fields.
+```
+
+The notice appears below the event name, stays visible across days, and follows the language switch. Use any wording, such as `Kartenzahlung möglich` / `Card payment accepted` or `Bar- und Kartenzahlung` / `Cash and card accepted`. Both translations are required when configured. Omit `payment` to hide the notice. With `CONTENT_DIR`, edit the menu and reload the page to see changes.
+
+Each food truck can also have its own optional `payment` notice, shown inside its card:
+
+```yaml
+food_trucks:
+  - id: pita_stop
+    payment: {de: Nur Barzahlung, en: Cash only}
+    # Keep the truck's name, description, location, from, and until.
+```
+
+Truck notices are independent of the conference notice; no payment method is inferred or inherited. Both example menus demonstrate cash-only, card payment, and cash-and-card trucks.

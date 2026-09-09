@@ -2,6 +2,7 @@ package web
 
 import (
 	"compress/gzip"
+	"html"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -197,7 +198,7 @@ func TestFoodTrucksInExampleMenu(t *testing.T) {
 		t.Fatal("empty day has truck section")
 	}
 	for _, truck := range config.Days[0].FoodTrucks {
-		for _, text := range []string{truck.Name.DE, truck.Name.EN, truck.Description.DE, truck.Description.EN, truck.Location.DE, truck.Location.EN, truck.From, truck.Until} {
+		for _, text := range []string{truck.Name.DE, truck.Name.EN, truck.Description.DE, truck.Description.EN, truck.Location.DE, truck.Location.EN, truck.From, truck.Until, html.EscapeString(truck.Payment.DE), html.EscapeString(truck.Payment.EN)} {
 			if !strings.Contains(body, text) {
 				t.Errorf("missing %q", text)
 			}
@@ -390,5 +391,31 @@ func TestGzipPreservesRangeResponses(t *testing.T) {
 	handler.ServeHTTP(response, request)
 	if response.Code != http.StatusPartialContent || response.Body.String() != "he" || response.Header().Get("Content-Encoding") != "" {
 		t.Fatalf("invalid range response: %d %q", response.Code, response.Body.String())
+	}
+}
+
+func TestPaymentNoticeRendering(t *testing.T) {
+	for _, payment := range []menu.Localized{{}, {DE: "Nur Barzahlung", EN: "Cash only"}, {DE: "Bar & Karte", EN: "Cash & card <accepted>"}} {
+		config := menu.Config{Conference: menu.Conference{Payment: payment}}
+		handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, httptest.NewRequest("GET", "/test", nil))
+		body := response.Body.String()
+		if response.Code != http.StatusOK {
+			t.Fatalf("status %d", response.Code)
+		}
+		if strings.Contains(body, `class="payment-notice"`) != (payment.DE != "") {
+			t.Fatal("unexpected notice visibility")
+		}
+		if payment.DE != "" {
+			for _, text := range []string{`<span data-lang-content="de">` + html.EscapeString(payment.DE) + `</span>`, `<span data-lang-content="en" hidden>` + html.EscapeString(payment.EN) + `</span>`} {
+				if !strings.Contains(body, text) {
+					t.Errorf("missing translated notice %q", text)
+				}
+			}
+		}
 	}
 }
