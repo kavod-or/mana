@@ -1,6 +1,7 @@
 package web
 
 import (
+	"bytes"
 	"compress/gzip"
 	"html/template"
 	"io"
@@ -15,13 +16,13 @@ import (
 )
 
 type server struct {
-	menu   menu.Loader
+	events map[string]menu.Loader
 	page   *template.Template
 	static http.Handler
 	logger *slog.Logger
 }
 
-func New(menuLoader menu.Loader, templates fs.FS, static fs.FS, logger *slog.Logger) (http.Handler, error) {
+func New(events map[string]menu.Loader, templates fs.FS, static fs.FS, logger *slog.Logger) (http.Handler, error) {
 	functions := template.FuncMap{
 		"version": func() string { return version.Current },
 		"tag": func(tags map[string]menu.Localized, id, language string) string {
@@ -41,8 +42,14 @@ func New(menuLoader menu.Loader, templates fs.FS, static fs.FS, logger *slog.Log
 		return nil, err
 	}
 
+	if _, err := page.New("landing").Parse(landingPage); err != nil {
+		return nil, err
+	}
+	if _, err := page.New("not-found").Parse(notFoundPage); err != nil {
+		return nil, err
+	}
 	s := &server{
-		menu:   menuLoader,
+		events: events,
 		page:   page,
 		static: http.StripPrefix("/static/", http.FileServer(http.FS(static))),
 		logger: logger,
@@ -56,21 +63,35 @@ func New(menuLoader menu.Loader, templates fs.FS, static fs.FS, logger *slog.Log
 }
 
 func (s *server) index(writer http.ResponseWriter, request *http.Request) {
-	if request.URL.Path != "/" {
-		http.NotFound(writer, request)
+	writer.Header().Set("Cache-Control", "no-store")
+	if request.URL.Path == "/" {
+		writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_ = s.page.ExecuteTemplate(writer, "landing", nil)
 		return
 	}
-
-	config, err := s.menu()
+	loader, ok := s.events[request.URL.Path]
+	if !ok {
+		writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+		writer.WriteHeader(http.StatusNotFound)
+		_ = s.page.ExecuteTemplate(writer, "not-found", nil)
+		return
+	}
+	config, err := loader()
 	if err != nil {
-		s.logger.Warn("menu reload failed; serving last valid version", "error", err)
+		s.logger.Warn("menu reload failed; serving last valid version", "event", request.URL.Path, "error", err)
 	}
-
-	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
-	writer.Header().Set("Cache-Control", "no-store")
-	if err := s.page.ExecuteTemplate(writer, "index.html", config); err != nil {
+	data := struct {
+		menu.Config
+		EventPath string
+	}{config, request.URL.Path}
+	var body bytes.Buffer
+	if err := s.page.ExecuteTemplate(&body, "index.html", data); err != nil {
 		s.logger.Error("render page", "error", err)
+		http.Error(writer, "Could not render menu", http.StatusInternalServerError)
+		return
 	}
+	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = writer.Write(body.Bytes())
 }
 
 func (s *server) health(writer http.ResponseWriter, _ *http.Request) {
@@ -114,7 +135,7 @@ func (writer gzipResponseWriter) Write(content []byte) (int, error) {
 func gzipResponses(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		acceptsGzip := strings.Contains(request.Header.Get("Accept-Encoding"), "gzip")
-		compressible := request.URL.Path == "/" || request.URL.Path == "/healthz" || strings.HasSuffix(request.URL.Path, ".css") || strings.HasSuffix(request.URL.Path, ".js")
+		compressible := !strings.HasPrefix(request.URL.Path, "/static/") || strings.HasSuffix(request.URL.Path, ".css") || strings.HasSuffix(request.URL.Path, ".js")
 		if request.Method == http.MethodHead || !acceptsGzip || !compressible {
 			next.ServeHTTP(writer, request)
 			return

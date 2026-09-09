@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#153b31">
   <meta name="description" content="Mana - The menu plan">
-  <title>Mana · AWFK 2026</title>
+  <title>Mana · {{.Conference.Name.DE}}</title>
   <link rel="icon" href="/static/favicon.png?v=2" type="image/png" sizes="64x64">
   <link rel="stylesheet" href="/static/styles.css?v=13">
   <script src="/static/app.js?v=5" defer></script>
@@ -13,7 +13,7 @@
 <body data-timezone="{{.Conference.Zone}}">
   <div class="site-shell">
     <header class="site-header">
-      <a class="brand" href="/" aria-label="Mana Startseite">
+      <a class="brand" href="{{.EventPath}}" aria-label="Mana">
         <img class="brand-logo" src="/static/logo.png?v=2" alt="Mana" width="512" height="168">
       </a>
 

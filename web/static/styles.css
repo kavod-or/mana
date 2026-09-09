@@ -726,3 +726,50 @@ footer {
 .focus-card > .size-prices {
   align-self: flex-start;
 }
+
+.landing-page {
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.notice-card {
+  width: min(100%, 32rem);
+  padding: clamp(1.5rem, 5vw, 3rem);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.notice-card > img {
+  width: 9rem;
+  height: auto;
+}
+
+.notice-card .error-code {
+  margin: 1.25rem 0 0.5rem;
+  color: var(--terracotta);
+  font-size: clamp(3.5rem, 12vw, 5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.notice-card h1,
+.notice-card h2 {
+  color: var(--green);
+  line-height: 1.25;
+}
+
+.notice-card h1 { font-size: 1.6rem; }
+.notice-card h2 { font-size: 1.1rem; }
+.notice-card p { color: var(--muted); font-size: 0.9rem; }
+
+.notice-translation {
+  margin-top: 1.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--line);
+}

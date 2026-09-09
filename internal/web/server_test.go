@@ -26,12 +26,12 @@ func TestServerRendersMenuAndSecurityHeaders(t *testing.T) {
 	}
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 
-	handler, err := New(func() (menu.Config, error) { return config, nil }, templateFS, staticFS, logger)
+	handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, templateFS, staticFS, logger)
 	if err != nil {
 		t.Fatalf("New returned an error: %v", err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/", nil)
+	request := httptest.NewRequest(http.MethodGet, "/test", nil)
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
 
@@ -52,7 +52,7 @@ func TestHealthEndpoint(t *testing.T) {
 	}
 	staticFS := fstest.MapFS{"styles.css": {Data: []byte("body{}")}}
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	handler, err := New(func() (menu.Config, error) { return menu.Config{}, nil }, templateFS, staticFS, logger)
+	handler, err := newTestServer(func() (menu.Config, error) { return menu.Config{}, nil }, templateFS, staticFS, logger)
 	if err != nil {
 		t.Fatalf("New returned an error: %v", err)
 	}
@@ -72,12 +72,12 @@ func TestCompressesHTMLWhenAccepted(t *testing.T) {
 	}
 	staticFS := fstest.MapFS{"styles.css": {Data: []byte("body{}")}}
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	handler, err := New(func() (menu.Config, error) { return menu.Config{}, nil }, templateFS, staticFS, logger)
+	handler, err := newTestServer(func() (menu.Config, error) { return menu.Config{}, nil }, templateFS, staticFS, logger)
 	if err != nil {
 		t.Fatalf("New returned an error: %v", err)
 	}
 
-	request := httptest.NewRequest(http.MethodGet, "/", nil)
+	request := httptest.NewRequest(http.MethodGet, "/test", nil)
 	request.Header.Set("Accept-Encoding", "gzip")
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
@@ -105,7 +105,7 @@ func TestStaticAssetsUseLongLivedCache(t *testing.T) {
 	}
 	staticFS := fstest.MapFS{"styles.css": {Data: []byte("body{}")}}
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	handler, err := New(func() (menu.Config, error) { return menu.Config{}, nil }, templateFS, staticFS, logger)
+	handler, err := newTestServer(func() (menu.Config, error) { return menu.Config{}, nil }, templateFS, staticFS, logger)
 	if err != nil {
 		t.Fatalf("New returned an error: %v", err)
 	}
@@ -134,12 +134,12 @@ func TestPricesInRealTemplate(t *testing.T) {
 			config.Permanent.Drinks[0].Price = &zero
 			config.Permanent.Snacks[0].Price = &item
 		}
-		handler, err := New(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+		handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 		if err != nil {
 			t.Fatal(err)
 		}
 		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/", nil))
+		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/test", nil))
 		body := response.Body.String()
 		if !configured {
 			if strings.Contains(body, `class="price"`) {
@@ -158,12 +158,12 @@ func TestPricesInRealTemplate(t *testing.T) {
 func TestSizePricesRender(t *testing.T) {
 	normal, large := menu.Price(0), menu.Price(420)
 	config := menu.Config{Days: []menu.Day{{Services: []menu.Service{{PriceNormal: &normal, PriceLarge: &large}}}}, Permanent: menu.Permanent{Coffee: []menu.Item{{PriceNormal: &normal}, {PriceLarge: &large}}}}
-	handler, err := New(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	if err != nil {
 		t.Fatal(err)
 	}
 	response := httptest.NewRecorder()
-	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/", nil))
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/test", nil))
 	body := response.Body.String()
 	for _, value := range []string{">Normal<", ">Regular<", ">Groß<", ">Large<", "0,00\u00a0€", "€0.00", "4,20\u00a0€", "€4.20"} {
 		if count := strings.Count(body, value); count != 3 {
@@ -182,12 +182,12 @@ func TestFoodTrucksInExampleMenu(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	handler, err := New(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	if err != nil {
 		t.Fatal(err)
 	}
 	response := httptest.NewRecorder()
-	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/", nil))
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/test", nil))
 	body := response.Body.String()
 	if strings.Count(body, `class="food-trucks"`) != 2 || strings.Count(body, `class="food-truck-card"`) != 3 {
 		t.Fatal("unexpected truck sections or cards")
@@ -207,12 +207,12 @@ func TestFoodTrucksInExampleMenu(t *testing.T) {
 func TestSoldOutRendering(t *testing.T) {
 	price := menu.Price(250)
 	config := menu.Config{Days: []menu.Day{{Services: []menu.Service{{SoldOut: true, Price: &price, Items: []menu.Item{{SoldOut: true, Price: &price}}}}}}, Permanent: menu.Permanent{Coffee: []menu.Item{{SoldOut: true, PriceNormal: &price}}, Drinks: []menu.Item{{SoldOut: true}}, Snacks: []menu.Item{{SoldOut: true}}}}
-	handler, err := New(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	if err != nil {
 		t.Fatal(err)
 	}
 	response := httptest.NewRecorder()
-	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/", nil))
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/test", nil))
 	body := response.Body.String()
 	for _, label := range []string{"Ausverkauft", "Sold out"} {
 		if count := strings.Count(body, label); count != 7 {
@@ -226,13 +226,69 @@ func TestSoldOutRendering(t *testing.T) {
 
 func TestEmptyRefreshmentsHidden(t *testing.T) {
 	config := menu.Config{Days: []menu.Day{{Services: []menu.Service{{}}}}}
-	handler, err := New(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	if err != nil {
 		t.Fatal(err)
 	}
 	response := httptest.NewRecorder()
-	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/", nil))
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/test", nil))
 	if strings.Contains(response.Body.String(), `id="refreshments-`) || strings.Contains(response.Body.String(), `class="always-group"`) {
 		t.Fatal("empty refreshments rendered")
+	}
+}
+
+func newTestServer(loader menu.Loader, templates fs.FS, static fs.FS, logger *slog.Logger) (http.Handler, error) {
+	return New(map[string]menu.Loader{"/test": loader}, templates, static, logger)
+}
+
+func TestEventRouting(t *testing.T) {
+	events := map[string]menu.Loader{}
+	for _, name := range []string{"alpha", "beta"} {
+		events["/"+name] = func() (menu.Config, error) {
+			return menu.Config{Conference: menu.Conference{Name: menu.Localized{DE: name}}}, nil
+		}
+	}
+	templates := fstest.MapFS{"web/templates/index.html": {Data: []byte(`{{.Conference.Name.DE}} {{.EventPath}}`)}}
+	handler, err := New(events, templates, fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{"/", "/alpha", "/beta", "/unknown", "/alpha/nested"} {
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, httptest.NewRequest("GET", path, nil))
+		switch path {
+		case "/":
+			if response.Code != 200 || !strings.Contains(response.Body.String(), "Please scan the QR code") || strings.Contains(response.Body.String(), "alpha") {
+				t.Fatal("incorrect landing page")
+			}
+		case "/alpha", "/beta":
+			if response.Code != 200 || response.Body.String() != path[1:]+" "+path {
+				t.Fatalf("incorrect event: %s", response.Body.String())
+			}
+		default:
+			if response.Code != 404 {
+				t.Fatalf("unknown path status %d", response.Code)
+			}
+		}
+	}
+}
+
+func TestNotFoundPage(t *testing.T) {
+	handler, err := New(nil, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest("GET", "/missing-event", nil))
+	if response.Code != 404 {
+		t.Fatalf("status %d", response.Code)
+	}
+	if response.Header().Get("Content-Type") != "text/html; charset=utf-8" {
+		t.Fatal("expected HTML")
+	}
+	for _, text := range []string{"Hier ist noch nicht gedeckt.", "This page couldn’t be found.", "QR-Code"} {
+		if !strings.Contains(response.Body.String(), text) {
+			t.Errorf("missing %q", text)
+		}
 	}
 }

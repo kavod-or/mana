@@ -7,7 +7,7 @@ services:
       - "8080:8080"
     environment:
       PORT: "8080"
-      MENU_PATH: /app/content/menu.yaml
+      CONTENT_DIR: /app/content
     volumes:
       # Mount the directory so atomic file replacements by editors remain visible.
       - ./content:/app/content:ro

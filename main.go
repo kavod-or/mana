@@ -13,19 +13,18 @@ import (
 	"syscall"
 	"time"
 
-	"mana/internal/menu"
 	"mana/internal/web"
 )
 
-//go:embed content/menu.yaml web/templates/index.html web/static/*
+//go:embed content web/templates/index.html web/static/*
 var assets embed.FS
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	menuStore, err := menu.NewStore(loadMenu)
+	events, err := loadEvents()
 	if err != nil {
-		logger.Error("could not load menu", "error", err)
+		logger.Error("could not load events", "error", err)
 		os.Exit(1)
 	}
 
@@ -35,7 +34,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	handler, err := web.New(menuStore.Current, assets, staticFiles, logger)
+	handler, err := web.New(events, assets, staticFiles, logger)
 	if err != nil {
 		logger.Error("could not create web server", "error", err)
 		os.Exit(1)
@@ -68,24 +67,6 @@ func main() {
 		logger.Error("server stopped unexpectedly", "error", err)
 		os.Exit(1)
 	}
-}
-
-func loadMenu() (menu.Config, error) {
-	if path := os.Getenv("MENU_PATH"); path != "" {
-		file, err := os.Open(path)
-		if err != nil {
-			return menu.Config{}, fmt.Errorf("open MENU_PATH: %w", err)
-		}
-		defer file.Close()
-		return menu.Decode(file)
-	}
-
-	file, err := assets.Open("content/menu.yaml")
-	if err != nil {
-		return menu.Config{}, fmt.Errorf("open embedded menu: %w", err)
-	}
-	defer file.Close()
-	return menu.Decode(file)
 }
 
 func envOrDefault(name, fallback string) string {

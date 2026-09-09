@@ -7,7 +7,7 @@ run:
 	go run .
 
 dev:
-	MENU_PATH=content/menu.yaml go tool -modfile=dev.mod air --build.include_ext "go,html,css,js,yaml"
+	CONTENT_DIR=content go tool -modfile=dev.mod air --build.include_ext "go,html,css,js,yaml"
 
 build:
 	go build -o bin/mana .
