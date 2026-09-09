@@ -7,7 +7,7 @@ test('theme is fetched only after a full hold and reused on subsequent toggles',
   const handlers = {};
   let callback, delay, downloads = 0, link, shown = false, message;
   let effectLoads = 0, starts = 0, stops = 0;
-  const source = fs.readFileSync('web/static/app.js', 'utf8').split('// A deliberate logo hold')[1].replace("import('/static/hearts.js?v=3')", 'loadHearts()');
+  const source = fs.readFileSync('web/static/app.js', 'utf8').split('// A deliberate logo hold')[1].replace("import('/static/hearts.js?v=4')", 'loadHearts()');
   vm.runInNewContext('// A deliberate logo hold'+source, {
     loadHearts: async () => { effectLoads++; return {startHearts: () => { starts++; return () => {stops++;}; }}; },
     document: {

@@ -20,9 +20,9 @@ function startShower() {
       context.setTransform(scale, 0, 0, scale, 0, 0);
     }
     resize();
-    const flakes = Array.from({length: 80}, () => ({
+    const flakes = Array.from({length: 80}, (_, index) => ({
       x: Math.random(), y: Math.random(), size: 14 + Math.random() * 16,
-      symbol: Math.random() < 0.55 ? '♥' : '✦', color: ['#ff238e', '#d665ff', '#ffe38a', '#fff5fc'][Math.floor(Math.random() * 4)],
+      heart: index % 2 === 0, color: ['#ff238e', '#d665ff', '#ffe38a', '#fff5fc'][Math.floor(index / 2) % 4],
       speed: 0.07 + Math.random() * 0.12, phase: Math.random() * Math.PI * 2,
     }));
     let frame = 0;
@@ -46,14 +46,7 @@ function startShower() {
       for (const flake of flakes) {
         if (!reducedMotion.matches) flake.y = (flake.y + seconds * flake.speed) % 1;
         const sway = reducedMotion.matches ? 0 : Math.sin(now / 1100 + flake.phase) * 18;
-        context.font = `${flake.size}px sans-serif`;
-        context.fillStyle = flake.color;
-        context.strokeStyle = '#9d126a';
-        context.lineWidth = 0.6;
-        const x = flake.x * width + sway;
-        const y = flake.y * (height + 50) - 25;
-        context.fillText(flake.symbol, x, y);
-        context.strokeText(flake.symbol, x, y);
+        drawParticle(context, flake, flake.x * width + sway, flake.y * (height + 50) - 25);
       }
       frame = requestAnimationFrame(draw);
     }
@@ -64,6 +57,37 @@ function startShower() {
     return finish;
 }
 
+
+// Normalized vector paths avoid platform-specific font and emoji rendering.
+function drawParticle(context, flake, x, y) {
+  context.save();
+  context.translate(x, y);
+  context.scale(flake.size, flake.size);
+  context.beginPath();
+  if (flake.heart) {
+    context.moveTo(0, 0.45);
+    context.bezierCurveTo(-0.12, 0.32, -0.5, 0.05, -0.5, -0.2);
+    context.bezierCurveTo(-0.5, -0.52, -0.15, -0.58, 0, -0.3);
+    context.bezierCurveTo(0.15, -0.58, 0.5, -0.52, 0.5, -0.2);
+    context.bezierCurveTo(0.5, 0.05, 0.12, 0.32, 0, 0.45);
+  } else {
+    context.moveTo(0, -0.5);
+    context.lineTo(0.12, -0.12);
+    context.lineTo(0.5, 0);
+    context.lineTo(0.12, 0.12);
+    context.lineTo(0, 0.5);
+    context.lineTo(-0.12, 0.12);
+    context.lineTo(-0.5, 0);
+    context.lineTo(-0.12, -0.12);
+  }
+  context.closePath();
+  context.fillStyle = flake.color;
+  context.strokeStyle = '#9d126a';
+  context.lineWidth = 0.6 / flake.size;
+  context.fill();
+  context.stroke();
+  context.restore();
+}
 
 export function startHearts() {
   if (stop) return () => { if (stop) stop(); };

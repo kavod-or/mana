@@ -183,7 +183,7 @@
         stageClicks = 0;
         stageLoading = true;
         try {
-          const {startHearts} = await import('/static/hearts.js?v=3');
+          const {startHearts} = await import('/static/hearts.js?v=4');
           if (document.documentElement.classList.contains('girly-vibes')) stageStop = startHearts();
         } catch {
           // The optional effect can be retried without interrupting the menu.
