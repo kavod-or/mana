@@ -136,7 +136,3 @@ Air is development-only: Docker excludes its module files and local build output
 `conference.timezone` sets the conference clock (default: `Europe/Berlin`). The page selects today, the next configured day if today has no menu, or the final day after the conference. The featured meal is the currently running service, then the next upcoming service, or the final service once the day ends. Future days show their first meal; past days show their last. Overlapping services feature the one that started most recently. Sold-out services remain visible with their badge.
 
 The clock updates every 15 seconds and when returning to the tab. Selecting a day or opening a topic link keeps that day selected until reload; its featured meal still updates. Without JavaScript, the first day and first meal remain the fallback.
-
-## Versioning
-
-The current version is defined in `internal/version/version.go` and displayed in the footer. Start at `0.1.0` and update `version.Current` for each release using `major.minor.patch`. The version is compiled into the application, so rebuild the binary or Docker image after changing it. Air picks up the Go file change automatically during development.
