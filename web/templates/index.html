@@ -7,7 +7,7 @@
   <meta name="description" content="Mana - The menu plan">
   <title>Mana · {{.Conference.Name.DE}}</title>
   <link rel="icon" href="/static/favicon.png?v=2" type="image/png" sizes="64x64">
-  <link rel="stylesheet" href="/static/styles.css?v=19">
+  <link rel="stylesheet" href="/static/styles.css?v=20">
   <script src="/static/app.js?v=14" defer></script>
 </head>
 <body data-timezone="{{.Conference.Zone}}">
@@ -117,6 +117,17 @@
                 <p><span data-lang-content="de">{{.Description.DE}}</span><span data-lang-content="en" hidden>{{.Description.EN}}</span></p>
                 <p class="food-truck-location"><span data-lang-content="de">Standort: {{.Location.DE}}</span><span data-lang-content="en" hidden>Location: {{.Location.EN}}</span></p>
                 {{template "payment" .Payment}}
+                {{if .Items}}
+                <ul class="food-truck-items">
+                  {{range .Items}}
+                  <li>
+                    <strong><span data-lang-content="de">{{.Name.DE}}</span><span data-lang-content="en" hidden>{{.Name.EN}}</span></strong>
+                    {{template "availability" .}}
+                    {{if or .Description.DE .Description.EN}}<small><span data-lang-content="de">{{.Description.DE}}</span><span data-lang-content="en" hidden>{{.Description.EN}}</span></small>{{end}}
+                  </li>
+                  {{end}}
+                </ul>
+                {{end}}
               </article>
               {{end}}
             </div>

@@ -653,6 +653,32 @@ footer {
   font-size: 1.3rem;
 }
 
+.food-truck-items {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1.25rem 0 0;
+  padding: 1rem 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.food-truck-items li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.food-truck-items strong {
+  flex: 1 1 8rem;
+}
+
+.food-truck-items small {
+  flex-basis: 100%;
+  color: var(--muted);
+}
+
 .food-truck-card p {
   color: var(--muted);
   font-size: 0.9rem;

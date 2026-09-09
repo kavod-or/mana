@@ -182,3 +182,20 @@ food_trucks:
 ```
 
 Truck notices are independent of the conference notice; no payment method is inferred or inherited. Both example menus demonstrate cash-only, card payment, and cash-and-card trucks.
+
+## Food truck menu items
+
+Add optional `items` to a food truck to list dishes and prices inside its card:
+
+```yaml
+food_trucks:
+  - id: pita_stop
+    # Keep the truck's name, description, location, serving times, and payment.
+    items:
+      - id: falafel_pita
+        name: {de: Falafel-Pita, en: Falafel pita}
+        price: 7.50
+        description: {de: Mit Hummus und Salat, en: With hummus and salad}
+```
+
+Each item requires an ID and both name translations. Prices use the same euro formatting as other menu items: omit `price` to hide it, use `0` for free items, or use `price_normal` and `price_large` for sizes. `sold_out: true` shows the sold-out badge instead of prices. Descriptions are optional and require both translations when present. Omit `items` or use `items: []` to hide the list. Both example menus include priced food truck dishes.

@@ -419,3 +419,29 @@ func TestPaymentNoticeRendering(t *testing.T) {
 		}
 	}
 }
+
+func TestFoodTruckItemRendering(t *testing.T) {
+	zero, normal, large := menu.Price(0), menu.Price(750), menu.Price(1000)
+	config := menu.Config{Days: []menu.Day{{FoodTrucks: []menu.FoodTruck{{Items: []menu.Item{
+		{Name: menu.Localized{DE: "Pita", EN: "Pita"}, Price: &normal, Description: menu.Localized{DE: "Mit Salat", EN: "With salad"}},
+		{Name: menu.Localized{DE: "Wasser", EN: "Water"}, Price: &zero},
+		{Name: menu.Localized{DE: "Pizza", EN: "Pizza"}, PriceNormal: &normal, PriceLarge: &large},
+		{Name: menu.Localized{DE: "Tacos", EN: "Tacos"}, Price: &large, SoldOut: true},
+		{Name: menu.Localized{DE: "Tagesgericht", EN: "Daily special"}},
+	}}, {Name: menu.Localized{DE: "Leer", EN: "Empty"}}}}}}
+	handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest("GET", "/test", nil))
+	body := response.Body.String()
+	if response.Code != 200 {
+		t.Fatalf("status %d", response.Code)
+	}
+	for text, count := range map[string]int{`class="food-truck-items"`: 1, "7,50\u00a0€": 2, "€7.50": 2, "€0.00": 1, "€10.00": 1, "Sold out": 1, "With salad": 1, "Daily special": 1} {
+		if got := strings.Count(body, text); got != count {
+			t.Errorf("%q count = %d, want %d", text, got, count)
+		}
+	}
+}

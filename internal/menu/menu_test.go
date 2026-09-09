@@ -280,3 +280,24 @@ func TestFoodTruckPaymentValidation(t *testing.T) {
 		}
 	}
 }
+
+func TestFoodTruckItemValidation(t *testing.T) {
+	for _, tc := range []struct {
+		item  Item
+		valid bool
+	}{
+		{Item{ID: "pita", Name: Localized{DE: "Pita", EN: "Pita"}}, true},
+		{Item{Name: Localized{DE: "Pita", EN: "Pita"}}, false},
+		{Item{ID: "pita", Name: Localized{DE: "Pita"}}, false},
+		{Item{ID: "pita", Name: Localized{DE: "Pita", EN: "Pita"}, Description: Localized{DE: "Salat"}}, false},
+	} {
+		config, err := Decode(strings.NewReader(validMenu))
+		if err != nil {
+			t.Fatal(err)
+		}
+		config.Days[0].FoodTrucks = []FoodTruck{{ID: "truck", Name: Localized{DE: "Truck", EN: "Truck"}, Description: Localized{DE: "Essen", EN: "Food"}, Location: Localized{DE: "Hof", EN: "Yard"}, From: "12:00", Until: "14:00", Items: []Item{tc.item}}}
+		if err := config.Validate(); (err == nil) != tc.valid {
+			t.Fatalf("item %v: %v", tc.item, err)
+		}
+	}
+}

@@ -97,6 +97,13 @@ days:
   - date: "2026-09-08"
     food_trucks:
       - id: pita_stop
+        items:
+          - id: falafel_pita
+            name: {de: Falafel-Pita, en: Falafel pita}
+            price: 7.50
+          - id: hummus_plate
+            name: {de: Hummus-Teller, en: Hummus plate}
+            price: 6.00
         payment: {de: Nur Barzahlung, en: Cash only}
         name: {de: Pita-Pause, en: The Pita Stop}
         description:
@@ -106,6 +113,10 @@ days:
         from: "11:30"
         until: "15:00"
       - id: pizza_van
+        items:
+          - id: margherita
+            name: {de: Pizza Margherita, en: Margherita pizza}
+            price: 9.00
         payment: {de: Kartenzahlung möglich, en: Card payment accepted}
         name: {de: Die rollende Pizzeria, en: The Rolling Pizzeria}
         description:
@@ -189,6 +200,10 @@ days:
   - date: "2026-09-09"
     food_trucks:
       - id: taco_garden
+        items:
+          - id: cauliflower_tacos
+            name: {de: Blumenkohl-Tacos, en: Cauliflower tacos}
+            price: 8.50
         payment: {de: Bar- und Kartenzahlung, en: Cash and card accepted}
         name: {de: Taco-Garten, en: Taco Garden}
         description:

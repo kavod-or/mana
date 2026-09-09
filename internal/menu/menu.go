@@ -42,6 +42,7 @@ type Day struct {
 }
 
 type FoodTruck struct {
+	Items       []Item    `yaml:"items"`
 	Payment     Localized `yaml:"payment"`
 	ID          string    `yaml:"id"`
 	Name        Localized `yaml:"name"`
@@ -158,6 +159,11 @@ func (config Config) Validate() error {
 				return fmt.Errorf("%s.id must be non-empty and unique within the day", path)
 			}
 			seenTrucks[truck.ID] = true
+			for itemIndex, item := range truck.Items {
+				if err := config.validateItem(fmt.Sprintf("%s.items[%d]", path, itemIndex), item); err != nil {
+					return err
+				}
+			}
 			if err := validatePayment(path+".payment", truck.Payment); err != nil {
 				return err
 			}
