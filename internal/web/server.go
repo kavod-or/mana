@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"mana/internal/menu"
+	"mana/internal/version"
 )
 
 type server struct {
@@ -22,6 +23,7 @@ type server struct {
 
 func New(menuLoader menu.Loader, templates fs.FS, static fs.FS, logger *slog.Logger) (http.Handler, error) {
 	functions := template.FuncMap{
+		"version": func() string { return version.Current },
 		"tag": func(tags map[string]menu.Localized, id, language string) string {
 			value, ok := tags[id]
 			if !ok {
