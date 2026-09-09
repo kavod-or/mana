@@ -123,3 +123,24 @@
   setInterval(updateSchedule, 15000);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) updateSchedule(); });
 })();
+
+// Keep only the trigger here; download the animation after the fifth click.
+(() => {
+  const trigger = document.querySelector('.app-version');
+  if (!trigger) return;
+  let clicks = 0;
+  let loading = false;
+  trigger.addEventListener('click', async () => {
+    if (loading || ++clicks < 5) return;
+    clicks = 0;
+    loading = true;
+    try {
+      const {startManna} = await import('/static/manna.js?v=2');
+      startManna();
+    } catch {
+      // A failed optional download must not affect the menu. Five clicks retry.
+    } finally {
+      loading = false;
+    }
+  });
+})();

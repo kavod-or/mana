@@ -292,3 +292,63 @@ func TestNotFoundPage(t *testing.T) {
 		}
 	}
 }
+
+func TestClientDoesNotExposeOtherEvents(t *testing.T) {
+	events := make(map[string]menu.Loader)
+	for _, name := range []string{"private-alpha", "private-beta"} {
+		events["/"+name] = func() (menu.Config, error) {
+			return menu.Config{Conference: menu.Conference{Name: menu.Localized{DE: name, EN: name}}, Days: []menu.Day{{Services: []menu.Service{{Title: menu.Localized{DE: name + "-dish", EN: name + "-dish"}}}}}}, nil
+		}
+	}
+	handler, err := New(events, os.DirFS("../.."), os.DirFS("../../web/static"), slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{"/", "/missing", "/private-alpha", "/private-beta", "/static/app.js", "/static/manna.js", "/static/styles.css", "/static/logo.png", "/static/favicon.png"} {
+		for _, encoding := range []string{"", "gzip"} {
+			request := httptest.NewRequest("GET", path, nil)
+			request.Header.Set("Accept-Encoding", encoding)
+			response := httptest.NewRecorder()
+			handler.ServeHTTP(response, request)
+			var reader io.Reader = response.Body
+			if response.Header().Get("Content-Encoding") == "gzip" {
+				compressed, err := gzip.NewReader(reader)
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer compressed.Close()
+				reader = compressed
+			}
+			body, err := io.ReadAll(reader)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, name := range []string{"private-alpha", "private-beta"} {
+				if path != "/"+name && strings.Contains(string(body), name) {
+					t.Errorf("%s exposes %s", path, name)
+				}
+			}
+			for _, forbidden := range []string{"events.yaml", "community-day.yaml", "github.com/kavod-or/mana"} {
+				if strings.Contains(string(body), forbidden) {
+					t.Errorf("%s exposes %s", path, forbidden)
+				}
+			}
+		}
+	}
+}
+
+func TestConfigurationAndStaticListingsAreNotPublic(t *testing.T) {
+	// Even accidental configuration files in the static directory stay private.
+	static := fstest.MapFS{"events.yaml": {Data: []byte("secret-event")}, "app.js.map": {Data: []byte("secret-event")}}
+	handler, err := New(nil, os.DirFS("../.."), static, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{"/events.yaml", "/content/events.yaml", "/content/menu.yaml", "/content/community-day.yaml", "/static/", "/static/events.yaml", "/static/app.js.map", "/static/../content/events.yaml"} {
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, httptest.NewRequest("GET", path, nil))
+		if response.Code == 200 || strings.Contains(response.Body.String(), "secret-event") {
+			t.Errorf("exposed %s", path)
+		}
+	}
+}

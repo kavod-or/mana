@@ -58,8 +58,20 @@ func New(events map[string]menu.Loader, templates fs.FS, static fs.FS, logger *s
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", s.index)
 	mux.HandleFunc("GET /healthz", s.health)
-	mux.Handle("GET /static/", cacheStatic(s.static))
+	mux.HandleFunc("GET /static/", s.asset)
 	return securityHeaders(gzipResponses(accessLog(mux, logger))), nil
+}
+
+// Only shared presentation assets are public. Never expose a directory listing,
+// source maps, or configuration files accidentally placed in the static folder.
+func (s *server) asset(writer http.ResponseWriter, request *http.Request) {
+	switch request.URL.Path {
+	case "/static/manna.js", "/static/app.js", "/static/styles.css", "/static/logo.png", "/static/favicon.png":
+		cacheStatic(s.static).ServeHTTP(writer, request)
+	default:
+		writer.Header().Set("Cache-Control", "no-store")
+		http.NotFound(writer, request)
+	}
 }
 
 func (s *server) index(writer http.ResponseWriter, request *http.Request) {

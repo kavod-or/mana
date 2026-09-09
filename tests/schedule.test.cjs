@@ -16,7 +16,7 @@ test('conference clock selects days and meals, while preserving manual selection
   const root = {lang: 'de'};
   const document = {documentElement: root, body: {dataset: {timezone: 'Europe/Berlin'}},
     querySelectorAll: (selector) => ({'[data-day-button]': days, '[data-day-panel]': panels}[selector] || []),
-    querySelector: () => ({setAttribute() {}}), getElementById: () => null, addEventListener() {}};
+    querySelector: (selector) => selector === ".app-version" ? null : ({setAttribute() {}}), getElementById: () => null, addEventListener() {}};
   class ClockDate extends Date { constructor(value) {super(value === undefined ? now : value);} }
   vm.runInNewContext(fs.readFileSync('web/static/app.js', 'utf8'), {document, Date: ClockDate, Intl, navigator: {languages: ['de']}, location: {hash: ''}, window: {addEventListener() {}}, setInterval: (callback) => {tick = callback;}});
   assert.equal(panels[0].hidden, false);
