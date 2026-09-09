@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#153b31">
+  <meta name="description" content="Mana - The menu plan">
+  <title>Mana · AWFK 2026</title>
+  <link rel="icon" href="/static/favicon.png?v=2" type="image/png" sizes="64x64">
+  <link rel="stylesheet" href="/static/styles.css?v=2">
+  <script src="/static/app.js?v=2" defer></script>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Mana Startseite">
+        <img class="brand-logo" src="/static/logo.png?v=2" alt="Mana" width="512" height="168">
+      </a>
+
+      <div class="header-tools">
+        <div class="location">
+          <span data-lang-content="de">{{.Conference.Location.DE}}</span>
+          <span data-lang-content="en" hidden>{{.Conference.Location.EN}}</span>
+        </div>
+        <div class="language-switch" aria-label="Sprache wählen">
+          <button type="button" data-language="de" aria-pressed="true">DE</button>
+          <span aria-hidden="true"></span>
+          <button type="button" data-language="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <p class="eyebrow" id="page-title" role="heading" aria-level="1">
+        <span data-lang-content="de">{{.Conference.Name.DE}}</span>
+        <span data-lang-content="en" hidden>{{.Conference.Name.EN}}</span>
+      </p>
+    </section>
+
+    <nav class="day-switcher" aria-label="Konferenztage">
+      {{range $index, $day := .Days}}
+      <button type="button" data-day-button="{{$index}}" data-date="{{$day.Date}}" aria-pressed="{{if eq $index 0}}true{{else}}false{{end}}">
+        <time datetime="{{$day.Date}}">{{$day.Date}}</time>
+      </button>
+      {{end}}
+    </nav>
+
+    {{range $dayIndex, $day := .Days}}
+    <main class="day-panel{{if eq $dayIndex 0}} is-active{{end}}" data-day-panel="{{$dayIndex}}" {{if ne $dayIndex 0}}hidden{{end}}>
+      {{with index $day.Services 0}}
+      <section class="overview-grid">
+        <article class="focus-card">
+          <div class="focus-topline">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span data-lang-content="de">Im Fokus</span>
+            <span data-lang-content="en" hidden>Featured</span>
+            <time>{{.From}}–{{.Until}}</time>
+          </div>
+          <h2>
+            <span data-lang-content="de">{{.Title.DE}}</span>
+            <span data-lang-content="en" hidden>{{.Title.EN}}</span>
+          </h2>
+          <p class="focus-subtitle">
+            <span data-lang-content="de">{{.Subtitle.DE}}</span>
+            <span data-lang-content="en" hidden>{{.Subtitle.EN}}</span>
+          </p>
+
+          <div class="focus-dishes">
+            {{range .Items}}
+            <div class="focus-dish">
+              <div>
+                <h3>
+                  <span data-lang-content="de">{{.Name.DE}}</span>
+                  <span data-lang-content="en" hidden>{{.Name.EN}}</span>
+                </h3>
+                {{if or .Description.DE .Description.EN}}
+                <p>
+                  <span data-lang-content="de">{{.Description.DE}}</span>
+                  <span data-lang-content="en" hidden>{{.Description.EN}}</span>
+                </p>
+                {{end}}
+              </div>
+              {{if .Tags}}
+              <div class="tags">
+                {{range .Tags}}<span><i aria-hidden="true"></i><b data-lang-content="de">{{tag $.Tags . "de"}}</b><b data-lang-content="en" hidden>{{tag $.Tags . "en"}}</b></span>{{end}}
+              </div>
+              {{end}}
+            </div>
+            {{end}}
+          </div>
+        </article>
+
+        <aside class="always-card">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">
+                <span data-lang-content="de">Durchgehend</span>
+                <span data-lang-content="en" hidden>All day</span>
+              </p>
+              <h2>
+                <span data-lang-content="de">Immer da</span>
+                <span data-lang-content="en" hidden>Always available</span>
+              </h2>
+            </div>
+            <span class="availability-mark" aria-hidden="true"></span>
+          </div>
+
+          <div class="always-group">
+            <h3>
+              <span data-lang-content="de">Getränke</span>
+              <span data-lang-content="en" hidden>Drinks</span>
+            </h3>
+            <ul>
+              {{range $.Permanent.Drinks}}
+              <li><span data-lang-content="de">{{.Name.DE}}</span><span data-lang-content="en" hidden>{{.Name.EN}}</span></li>
+              {{end}}
+            </ul>
+          </div>
+
+          <div class="always-group">
+            <h3>
+              <span data-lang-content="de">Snacks</span>
+              <span data-lang-content="en" hidden>Snacks</span>
+            </h3>
+            <ul>
+              {{range $.Permanent.Snacks}}
+              <li><span data-lang-content="de">{{.Name.DE}}</span><span data-lang-content="en" hidden>{{.Name.EN}}</span></li>
+              {{end}}
+            </ul>
+          </div>
+        </aside>
+      </section>
+      {{end}}
+
+      <section class="schedule" aria-labelledby="schedule-title-{{$dayIndex}}">
+        <div class="section-heading">
+          <p class="eyebrow">
+            <span data-lang-content="de">Programm</span>
+            <span data-lang-content="en" hidden>Schedule</span>
+          </p>
+          <h2 id="schedule-title-{{$dayIndex}}">
+            <span data-lang-content="de">Der ganze Tag</span>
+            <span data-lang-content="en" hidden>The full day</span>
+          </h2>
+        </div>
+
+        <div class="timeline">
+          {{range .Services}}
+          <article class="timeline-item">
+            <div class="timeline-time"><time>{{.From}}</time><span>– {{.Until}}</span></div>
+            <div class="timeline-content">
+              <h3><span data-lang-content="de">{{.Title.DE}}</span><span data-lang-content="en" hidden>{{.Title.EN}}</span></h3>
+              <p><span data-lang-content="de">{{.Subtitle.DE}}</span><span data-lang-content="en" hidden>{{.Subtitle.EN}}</span></p>
+              <div class="timeline-dishes">
+                {{range .Items}}
+                <div>
+                  <strong><span data-lang-content="de">{{.Name.DE}}</span><span data-lang-content="en" hidden>{{.Name.EN}}</span></strong>
+                  {{if or .Description.DE .Description.EN}}<small><span data-lang-content="de">{{.Description.DE}}</span><span data-lang-content="en" hidden>{{.Description.EN}}</span></small>{{end}}
+                </div>
+                {{end}}
+              </div>
+            </div>
+          </article>
+          {{end}}
+        </div>
+      </section>
+    </main>
+    {{end}}
+
+    <footer>
+      <span data-lang-content="de">Guten Appetit!</span>
+      <span data-lang-content="en" hidden>Enjoy your meal!</span>
+    </footer>
+  </div>
+</body>
+</html>

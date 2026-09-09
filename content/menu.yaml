@@ -1,0 +1,211 @@
+conference:
+  name:
+    de: Beispiel Konferenz
+    en: Example Conference
+  location:
+    de: Raum 1 · Ebene 1
+    en: Room 1 · Level 1
+
+tags:
+  vegan:
+    de: Vegan
+    en: Vegan
+  vegetarian:
+    de: Vegetarisch
+    en: Vegetarian
+  gluten_free:
+    de: Glutenfrei
+    en: Gluten-free
+  kosher:
+    de: Koscher
+    en: Kosher
+
+permanent:
+  drinks:
+    - id: coffee
+      name:
+        de: Filter-Kaffee, Espresso, Latte Macchiato, Flat White, Americano, Cortado, Cappuccino
+        en: Filter coffee, Espresso, Latte Macchiato, Flat White, Americano, Cortado, Cappuccino
+    - id: softdrinks
+      name:
+        de: Wasser (still, medium, classic), Coca Cola, Fanta, Cola Mix, Apfelschorle, Rote-Früchte Schorle, Iso Sport
+        en: Water (still, medium-carbonated, sparkling), Coca-Cola, Fanta, cola mix, apple spritzer, red berry spritzer, isotonic sports drink
+  snacks:
+    - id: fruit
+      name:
+        de: Frisches Obst
+        en: Fresh fruit
+      tags: [vegan, gluten_free]
+    - id: granola_bars
+      name:
+        de: Müsliriegel
+        en: Granola bars
+      tags: [vegetarian]
+    - id: savoury_snacks
+      name:
+        de: Salzgebäck
+        en: Savoury snacks
+
+days:
+  - date: "2026-10-12"
+    services:
+      - id: lunch
+        title:
+          de: Mittagessen
+          en: Lunch
+        subtitle:
+          de: Warm, frisch und direkt im Foyer
+          en: Freshly prepared and served in the foyer
+        from: "12:30"
+        until: "14:00"
+        items:
+          - id: vegetable_curry
+            name:
+              de: Geröstetes Gemüse-Curry
+              en: Roasted vegetable curry
+            description:
+              de: Basmatireis · Koriander · Limette
+              en: Basmati rice · coriander · lime
+            tags: [vegan, gluten_free]
+          - id: chicken_curry
+            name:
+              de: Hähnchen-Curry
+              en: Chicken curry
+            description:
+              de: Basmatireis · Kräuter · Joghurt
+              en: Basmati rice · herbs · yoghurt
+            tags: [kosher]
+      - id: coffee_break
+        title:
+          de: Kaffeepause
+          en: Coffee break
+        subtitle:
+          de: Eine kleine Pause am Nachmittag
+          en: A short afternoon break
+        from: "15:30"
+        until: "16:00"
+        items:
+          - id: cake
+            name:
+              de: Kuchen & Gebäck
+              en: Cake & pastries
+            description:
+              de: Mit veganer Alternative
+              en: Vegan option available
+            tags: [vegetarian]
+      - id: dinner
+        title:
+          de: Abendessen
+          en: Dinner
+        subtitle:
+          de: Gemeinsam den ersten Tag ausklingen lassen
+          en: A relaxed close to the first day
+        from: "18:30"
+        until: "20:00"
+        items:
+          - id: levantine_buffet
+            name:
+              de: Levantinisches Buffet
+              en: Levantine buffet
+            description:
+              de: Mezze · Fladenbrot · Salate
+              en: Mezze · flatbread · salads
+            tags: [vegetarian]
+
+  - date: "2026-10-13"
+    services:
+      - id: breakfast
+        title:
+          de: Frühstück
+          en: Breakfast
+        subtitle:
+          de: Ein ruhiger Start in den Konferenztag
+          en: A relaxed start to the conference day
+        from: "08:00"
+        until: "10:00"
+        items:
+          - id: yoghurt_granola
+            name:
+              de: Joghurt & Granola
+              en: Yoghurt & granola
+            description:
+              de: Beeren · Honig · geröstete Kerne
+              en: Berries · honey · toasted seeds
+            tags: [vegetarian]
+          - id: overnight_oats
+            name:
+              de: Overnight Oats
+              en: Overnight oats
+            description:
+              de: Hafer · Apfel · Zimt
+              en: Oats · apple · cinnamon
+            tags: [vegan]
+      - id: lunch
+        title:
+          de: Mittagessen
+          en: Lunch
+        subtitle:
+          de: Leichtes Mittagessen zwischen den Sessions
+          en: A light lunch between sessions
+        from: "12:30"
+        until: "14:00"
+        items:
+          - id: couscous
+            name:
+              de: Couscous & Ofengemüse
+              en: Couscous & roasted vegetables
+            description:
+              de: Kräuter · Zitrone · Tahini
+              en: Herbs · lemon · tahini
+            tags: [vegan]
+      - id: coffee_break
+        title:
+          de: Kaffeepause
+          en: Coffee break
+        subtitle:
+          de: Süßes und Obst für neue Energie
+          en: Something sweet and fresh fruit
+        from: "15:30"
+        until: "16:00"
+        items:
+          - id: pastries
+            name:
+              de: Gebäck & Obst
+              en: Pastries & fruit
+            tags: [vegetarian]
+
+  - date: "2026-10-14"
+    services:
+      - id: lunch
+        title:
+          de: Mittagessen
+          en: Lunch
+        subtitle:
+          de: Zum Abschluss noch einmal gemeinsam essen
+          en: One last meal together
+        from: "12:00"
+        until: "13:30"
+        items:
+          - id: mushroom_ragout
+            name:
+              de: Pilzragout
+              en: Mushroom ragout
+            description:
+              de: Kartoffelpüree · Petersilie
+              en: Mashed potatoes · parsley
+            tags: [vegetarian, gluten_free]
+      - id: farewell
+        title:
+          de: Farewell Snack
+          en: Farewell snack
+        subtitle:
+          de: Zum Mitnehmen für die Heimreise
+          en: Something for the journey home
+        from: "15:00"
+        until: "16:00"
+        items:
+          - id: takeaway
+            name:
+              de: Obst & Müsliriegel
+              en: Fruit & granola bars
+            tags: [vegetarian]
