@@ -2,6 +2,7 @@
 
 test:
 	go test ./...
+	node --test tests/*.test.cjs
 
 run:
 	go run .
@@ -17,4 +18,3 @@ docker-up:
 
 docker-down:
 	docker compose down
-

@@ -18,7 +18,7 @@ test('conference clock selects days and meals, while preserving manual selection
     querySelectorAll: (selector) => ({'[data-day-button]': days, '[data-day-panel]': panels}[selector] || []),
     querySelector: (selector) => [".app-version", ".brand"].includes(selector) ? null : ({setAttribute() {}}), getElementById: () => null, addEventListener() {}};
   class ClockDate extends Date { constructor(value) {super(value === undefined ? now : value);} }
-  vm.runInNewContext(fs.readFileSync('web/static/app.js', 'utf8'), {document, Date: ClockDate, Intl, navigator: {languages: ['de']}, location: {hash: ''}, window: {addEventListener() {}}, setInterval: (callback) => {tick = callback;}});
+  vm.runInNewContext(fs.readFileSync('web/static/app.js', 'utf8'), {document, performance: {getEntriesByType: () => []}, Date: ClockDate, Intl, navigator: {languages: ['de']}, location: {hash: ''}, window: {addEventListener() {}}, setInterval: (callback) => {tick = callback;}});
   assert.equal(panels[0].hidden, false);
   assert.equal(panels[0].meals[1].hidden, false);
   now = '2026-10-12T12:00:00Z'; tick(); // lunch ends, dinner next

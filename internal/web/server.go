@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -146,9 +147,11 @@ func (writer gzipResponseWriter) Write(content []byte) (int, error) {
 
 func gzipResponses(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		acceptsGzip := strings.Contains(request.Header.Get("Accept-Encoding"), "gzip")
 		compressible := !strings.HasPrefix(request.URL.Path, "/static/") || strings.HasSuffix(request.URL.Path, ".css") || strings.HasSuffix(request.URL.Path, ".js")
-		if request.Method == http.MethodHead || !acceptsGzip || !compressible {
+		if compressible {
+			writer.Header().Add("Vary", "Accept-Encoding")
+		}
+		if request.Method == http.MethodHead || !acceptsGzip(request.Header.Get("Accept-Encoding")) || !compressible || request.Header.Get("Range") != "" {
 			next.ServeHTTP(writer, request)
 			return
 		}
@@ -161,9 +164,34 @@ func gzipResponses(next http.Handler) http.Handler {
 		defer compressed.Close()
 
 		writer.Header().Set("Content-Encoding", "gzip")
-		writer.Header().Add("Vary", "Accept-Encoding")
 		next.ServeHTTP(gzipResponseWriter{ResponseWriter: writer, writer: compressed}, request)
 	})
+}
+
+func acceptsGzip(header string) bool {
+	wildcard := false
+	for _, encoding := range strings.Split(header, ",") {
+		parts := strings.Split(encoding, ";")
+		name := strings.TrimSpace(parts[0])
+		quality := 1.0
+		for _, parameter := range parts[1:] {
+			key, value, ok := strings.Cut(parameter, "=")
+			if ok && strings.EqualFold(strings.TrimSpace(key), "q") {
+				parsed, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+				quality = 0
+				if err == nil && parsed >= 0 && parsed <= 1 {
+					quality = parsed
+				}
+			}
+		}
+		if strings.EqualFold(name, "gzip") {
+			return quality > 0
+		}
+		if name == "*" {
+			wildcard = quality > 0
+		}
+	}
+	return wildcard
 }
 
 type responseRecorder struct {

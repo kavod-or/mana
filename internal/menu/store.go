@@ -11,7 +11,8 @@ type Loader func() (Config, error)
 // Reload attempts are rate-limited so a busy conference does not parse the
 // same file hundreds of times per second.
 type Store struct {
-	mu              sync.RWMutex
+	mu              sync.Mutex
+	reloading       bool
 	loader          Loader
 	current         Config
 	reloadInterval  time.Duration
@@ -37,22 +38,21 @@ func newStore(loader Loader, reloadInterval time.Duration) (*Store, error) {
 
 func (store *Store) Current() (Config, error) {
 	store.mu.Lock()
-	if time.Now().Before(store.nextReloadAfter) {
+	if store.reloading || time.Now().Before(store.nextReloadAfter) {
 		config := store.current
 		store.mu.Unlock()
 		return config, nil
 	}
-	store.nextReloadAfter = time.Now().Add(store.reloadInterval)
-	previous := store.current
+	store.reloading = true
 	store.mu.Unlock()
 
 	config, err := store.loader()
-	if err != nil {
-		return previous, err
-	}
-
 	store.mu.Lock()
-	store.current = config
-	store.mu.Unlock()
-	return config, nil
+	defer store.mu.Unlock()
+	store.reloading = false
+	store.nextReloadAfter = time.Now().Add(store.reloadInterval)
+	if err == nil {
+		store.current = config
+	}
+	return store.current, err
 }

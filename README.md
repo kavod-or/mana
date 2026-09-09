@@ -55,6 +55,8 @@ go test ./...
 go build -o bin/mana .
 ```
 
+Run `make test` to include the JavaScript tests (requires Node.js with `node --test` support).
+
 ## Configuration
 
 | Variable | Default | Description |

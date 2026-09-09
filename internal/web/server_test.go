@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 	"testing/fstest"
+	"time"
 
 	"mana/internal/menu"
 )
@@ -350,5 +351,44 @@ func TestConfigurationAndStaticListingsAreNotPublic(t *testing.T) {
 		if response.Code == 200 || strings.Contains(response.Body.String(), "secret-event") {
 			t.Errorf("exposed %s", path)
 		}
+	}
+}
+
+func TestGzipNegotiation(t *testing.T) {
+	for _, tc := range []struct {
+		header     string
+		compressed bool
+	}{
+		{"", false}, {"br", false}, {"gzip", true}, {"br, gzip;q=0.5", true},
+		{"gzip;q=0", false}, {"*;q=1, gzip;q=0", false}, {"*", true},
+		{"xgzip", false}, {"gzip;q=invalid", false},
+	} {
+		t.Run(tc.header, func(t *testing.T) {
+			handler := gzipResponses(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("hello")) }))
+			request := httptest.NewRequest("GET", "/test", nil)
+			request.Header.Set("Accept-Encoding", tc.header)
+			response := httptest.NewRecorder()
+			handler.ServeHTTP(response, request)
+			if got := response.Header().Get("Content-Encoding") == "gzip"; got != tc.compressed {
+				t.Errorf("compressed = %v", got)
+			}
+			if response.Header().Get("Vary") != "Accept-Encoding" {
+				t.Error("missing Vary")
+			}
+		})
+	}
+}
+
+func TestGzipPreservesRangeResponses(t *testing.T) {
+	handler := gzipResponses(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeContent(w, r, "app.js", time.Time{}, strings.NewReader("hello"))
+	}))
+	request := httptest.NewRequest("GET", "/static/app.js", nil)
+	request.Header.Set("Accept-Encoding", "gzip")
+	request.Header.Set("Range", "bytes=0-1")
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+	if response.Code != http.StatusPartialContent || response.Body.String() != "he" || response.Header().Get("Content-Encoding") != "" {
+		t.Fatalf("invalid range response: %d %q", response.Code, response.Body.String())
 	}
 }

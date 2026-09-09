@@ -207,3 +207,40 @@ func TestDecodeRejectsAmbiguousMenu(t *testing.T) {
 		}
 	}
 }
+
+func TestTimeRequiresZeroPaddedHours(t *testing.T) {
+	for _, value := range []string{"9:00", "09:0", "24:00", "12:30:00"} {
+		if err := validateTime("from", value); err == nil {
+			t.Errorf("accepted %q", value)
+		}
+	}
+	for _, value := range []string{"00:00", "09:00", "23:59"} {
+		if err := validateTime("from", value); err != nil {
+			t.Errorf("rejected %q: %v", value, err)
+		}
+	}
+}
+
+func TestStoreServesCachedMenuDuringReload(t *testing.T) {
+	started, release := make(chan struct{}), make(chan struct{})
+	loads := 0
+	store, err := newStore(func() (Config, error) {
+		loads++
+		if loads > 1 {
+			close(started)
+			<-release
+		}
+		return Config{Conference: Conference{Name: Localized{EN: "Conference"}}}, nil
+	}, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan struct{})
+	go func() { store.Current(); close(done) }()
+	<-started
+	defer func() { close(release); <-done }()
+	config, err := store.Current()
+	if err != nil || config.Conference.Name.EN != "Conference" {
+		t.Fatalf("cached reload: %v, %v", config, err)
+	}
+}

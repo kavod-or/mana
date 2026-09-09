@@ -245,7 +245,7 @@ func validateOptionalLocalized(path string, value Localized) error {
 }
 
 func validateTime(path, value string) error {
-	if _, err := time.Parse("15:04", value); err != nil {
+	if parsed, err := time.Parse("15:04", value); err != nil || parsed.Format("15:04") != value {
 		return fmt.Errorf("%s must use HH:MM", path)
 	}
 	return nil
