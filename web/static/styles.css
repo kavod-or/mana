@@ -781,3 +781,19 @@ footer {
   z-index: 100;
   pointer-events: none;
 }
+
+.github-link {
+  display: block;
+  width: fit-content;
+  min-height: 2.75rem;
+  margin: 0.5rem auto 0;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.5rem;
+  color: inherit;
+  text-underline-offset: 0.2em;
+}
+
+.github-link:hover {
+  color: var(--green);
+  background: var(--green-soft);
+}

@@ -328,7 +328,7 @@ func TestClientDoesNotExposeOtherEvents(t *testing.T) {
 					t.Errorf("%s exposes %s", path, name)
 				}
 			}
-			for _, forbidden := range []string{"events.yaml", "community-day.yaml", "github.com/kavod-or/mana"} {
+			for _, forbidden := range []string{"events.yaml", "community-day.yaml"} {
 				if strings.Contains(string(body), forbidden) {
 					t.Errorf("%s exposes %s", path, forbidden)
 				}
