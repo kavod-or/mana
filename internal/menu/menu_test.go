@@ -10,7 +10,7 @@ conference:
   name: {de: Konferenz, en: Conference}
   location: {de: Foyer, en: Foyer}
 tags:
-  vegan: {de: Vegan, en: Vegan}
+  vegetarian: {de: Vegetarisch, en: Vegetarian}
 permanent:
   drinks:
     - id: water
@@ -52,7 +52,7 @@ func TestValidateRejectsIncompleteTranslation(t *testing.T) {
 }
 
 func TestValidateRejectsIncompleteTagTranslation(t *testing.T) {
-	config, err := Decode(strings.NewReader(strings.Replace(validMenu, "{de: Vegan, en: Vegan}", "{de: Vegan}", 1)))
+	config, err := Decode(strings.NewReader(strings.Replace(validMenu, "{de: Vegetarisch, en: Vegetarian}", "{de: Vegetarisch}", 1)))
 	if err == nil {
 		t.Fatalf("Decode accepted incomplete tag translation: %#v", config)
 	}
@@ -85,5 +85,125 @@ func TestStoreKeepsLastValidMenu(t *testing.T) {
 	}
 	if config.Conference.Name.EN != "Conference" {
 		t.Fatalf("Current did not retain the last valid menu: %#v", config)
+	}
+}
+
+func TestOptionalPrices(t *testing.T) {
+	for _, value := range []string{"12.50", "0", "1234.5", "null"} {
+		t.Run(value, func(t *testing.T) {
+			source := strings.Replace(validMenu, "- id: lunch", "- id: lunch\n        price: "+value, 1)
+			source = strings.Replace(source, "- id: water", "- id: water\n      price: "+value, 1)
+			config, err := Decode(strings.NewReader(source))
+			if err != nil {
+				t.Fatal(err)
+			}
+			meal, item := config.Days[0].Services[0].Price, config.Permanent.Drinks[0].Price
+			if value == "null" {
+				if meal != nil || item != nil {
+					t.Fatal("null prices must be absent")
+				}
+				return
+			}
+			if meal == nil || item == nil || *meal != *item {
+				t.Fatal("prices were not decoded")
+			}
+			want := map[string][2]string{"12.50": {"12,50\u00a0€", "€12.50"}, "0": {"0,00\u00a0€", "€0.00"}, "1234.5": {"1.234,50\u00a0€", "€1,234.50"}}[value]
+			if meal.German() != want[0] || meal.English() != want[1] {
+				t.Fatalf("unexpected formatting: %s / %s", meal.German(), meal.English())
+			}
+		})
+	}
+	for _, value := range []string{"-1", "1.234", "NaN", ".inf", "true", "12,50", "[12]", "{amount: 12}", "999999999999999999999"} {
+		t.Run("invalid_"+value, func(t *testing.T) {
+			source := strings.Replace(validMenu, "- id: lunch", "- id: lunch\n        price: "+value, 1)
+			if _, err := Decode(strings.NewReader(source)); err == nil {
+				t.Fatalf("accepted %s", value)
+			}
+		})
+	}
+}
+
+func TestCoffeeItems(t *testing.T) {
+	source := strings.Replace(validMenu, "  drinks:", "  coffee:\n    - id: espresso\n      price: 2.00\n      name: {de: Espresso, en: Espresso}\n  drinks:", 1)
+	config, err := Decode(strings.NewReader(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(config.Permanent.Coffee) != 1 || config.Permanent.Coffee[0].Price.English() != "€2.00" {
+		t.Fatal("coffee not decoded")
+	}
+	if _, err := Decode(strings.NewReader(strings.Replace(source, "{de: Espresso, en: Espresso}", "{de: Espresso}", 1))); err == nil {
+		t.Fatal("accepted missing coffee translation")
+	}
+}
+
+func TestSizePrices(t *testing.T) {
+	for _, fields := range []string{"price_normal: 0", "price_large: 4.20", "price_normal: 3.20\n      price_large: 4.20"} {
+		source := strings.Replace(validMenu, "- id: water", "- id: water\n      "+fields, 1)
+		config, err := Decode(strings.NewReader(source))
+		if err != nil {
+			t.Fatal(err)
+		}
+		item := config.Permanent.Drinks[0]
+		if item.PriceNormal == nil && item.PriceLarge == nil {
+			t.Fatal("size prices missing")
+		}
+	}
+	for _, fields := range []string{"price_normal: -1", "price_large: 1.234", "price: 2\n      price_large: 3"} {
+		source := strings.Replace(validMenu, "- id: water", "- id: water\n      "+fields, 1)
+		if _, err := Decode(strings.NewReader(source)); err == nil {
+			t.Fatalf("accepted %s", fields)
+		}
+	}
+}
+
+func TestFoodTrucks(t *testing.T) {
+	truck := `
+    food_trucks:
+      - id: pita
+        name: {de: Pita-Pause, en: Pita Stop}
+        description: {de: Frische Pita, en: Fresh pita}
+        location: {de: Innenhof, en: Courtyard}
+        from: "11:30"
+        until: "15:00"
+`
+	source := strings.Replace(validMenu, "    services:", truck+"    services:", 1)
+	config, err := Decode(strings.NewReader(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(config.Days[0].FoodTrucks) != 1 {
+		t.Fatal("missing food truck")
+	}
+	for _, pair := range [][2]string{{"en: Pita Stop", ""}, {"en: Fresh pita", ""}, {"en: Courtyard", ""}, {"11:30", "25:00"}, {"15:00", "10:00"}, {"id: pita", "id: ''"}} {
+		if _, err := Decode(strings.NewReader(strings.Replace(source, pair[0], pair[1], 1))); err == nil {
+			t.Errorf("accepted invalid truck: %s", pair[0])
+		}
+	}
+}
+
+func TestSoldOut(t *testing.T) {
+	for _, value := range []string{"true", "false"} {
+		source := strings.Replace(validMenu, "- id: water", "- id: water\n      sold_out: "+value, 1)
+		source = strings.Replace(source, "- id: lunch", "- id: lunch\n        sold_out: "+value, 1)
+		config, err := Decode(strings.NewReader(source))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if config.Permanent.Drinks[0].SoldOut != (value == "true") || config.Days[0].Services[0].SoldOut != (value == "true") {
+			t.Fatal("incorrect sold out value")
+		}
+	}
+}
+
+func TestDecodeRejectsAmbiguousMenu(t *testing.T) {
+	for _, source := range []string{
+		validMenu + "\n---\n" + validMenu,
+		strings.Replace(validMenu, `until: "14:00"`, `until: "11:00"`, 1),
+		strings.Replace(validMenu, "de: Konferenz", `de: " "`, 1),
+	} {
+		if _, err := Decode(strings.NewReader(source)); err == nil {
+			t.Fatal("accepted invalid menu")
+		}
 	}
 }

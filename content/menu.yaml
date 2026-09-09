@@ -1,3 +1,6 @@
+# Optional prices in EUR: add price: 12.50 to a service or any item.
+# Omit price (or use null) to hide it; price: 0 displays zero.
+# Add sold_out: true to any meal or item to show Ausverkauft / Sold out.
 conference:
   name:
     de: Beispiel Konferenz
@@ -7,9 +10,6 @@ conference:
     en: Room 1 · Level 1
 
 tags:
-  vegan:
-    de: Vegan
-    en: Vegan
   vegetarian:
     de: Vegetarisch
     en: Vegetarian
@@ -21,35 +21,94 @@ tags:
     en: Kosher
 
 permanent:
-  drinks:
-    - id: coffee
+  coffee:
+    - id: filter_coffee
+      price: 2.50
       name:
-        de: Filter-Kaffee, Espresso, Latte Macchiato, Flat White, Americano, Cortado, Cappuccino
-        en: Filter coffee, Espresso, Latte Macchiato, Flat White, Americano, Cortado, Cappuccino
+        de: Filter-Kaffee
+        en: Filter coffee
+    - id: espresso
+      price_normal: 2.00
+      price_large: 3.00
+      name:
+        de: Espresso
+        en: Espresso
+    - id: latte_macchiato
+      price: 3.80
+      name:
+        de: Latte Macchiato
+        en: Latte macchiato
+    - id: flat_white
+      price: 3.50
+      name:
+        de: Flat White
+        en: Flat white
+    - id: americano
+      price_normal: 2.80
+      price_large: 3.50
+      name:
+        de: Americano
+        en: Americano
+    - id: cortado
+      price: 2.80
+      name:
+        de: Cortado
+        en: Cortado
+    - id: cappuccino
+      sold_out: true
+      price_normal: 3.20
+      price_large: 4.20
+      name:
+        de: Cappuccino
+        en: Cappuccino
+  drinks:
     - id: softdrinks
+      price: 2.00
       name:
         de: Wasser (still, medium, classic), Coca Cola, Fanta, Cola Mix, Apfelschorle, Rote-Früchte Schorle, Iso Sport
         en: Water (still, medium-carbonated, sparkling), Coca-Cola, Fanta, cola mix, apple spritzer, red berry spritzer, isotonic sports drink
   snacks:
     - id: fruit
+      price: 0
       name:
         de: Frisches Obst
         en: Fresh fruit
-      tags: [vegan, gluten_free]
+      tags: [vegetarian, gluten_free]
     - id: granola_bars
+      sold_out: true
+      price: 1.50
       name:
         de: Müsliriegel
         en: Granola bars
       tags: [vegetarian]
     - id: savoury_snacks
+      price: 1.00
       name:
         de: Salzgebäck
         en: Savoury snacks
 
 days:
   - date: "2026-10-12"
+    food_trucks:
+      - id: pita_stop
+        name: {de: Pita-Pause, en: The Pita Stop}
+        description:
+          de: Frisch gebackene Pita mit knusprigen Falafeln, Hummus und knackigem Salat.
+          en: Freshly baked pita with crisp falafel, hummus and crunchy salad.
+        location: {de: Innenhof · neben dem Haupteingang, en: Courtyard · beside the main entrance}
+        from: "11:30"
+        until: "15:00"
+      - id: pizza_van
+        name: {de: Die rollende Pizzeria, en: The Rolling Pizzeria}
+        description:
+          de: Steinofenpizza mit Tomate und Mozzarella oder Pilzen und frischem Rucola.
+          en: Stone-baked pizza with tomato and mozzarella or mushrooms and fresh rocket.
+        location: {de: Vorplatz · am Brunnen, en: Forecourt · by the fountain}
+        from: "17:00"
+        until: "20:30"
     services:
       - id: lunch
+        price: 12.50
         title:
           de: Mittagessen
           en: Lunch
@@ -59,23 +118,27 @@ days:
         from: "12:30"
         until: "14:00"
         items:
-          - id: vegetable_curry
+          - id: pumpkin_chickpea_curry
+            price: 8.50
             name:
-              de: Geröstetes Gemüse-Curry
-              en: Roasted vegetable curry
+              de: Kürbis-Kichererbsen-Curry
+              en: Pumpkin & chickpea curry
             description:
-              de: Basmatireis · Koriander · Limette
-              en: Basmati rice · coriander · lime
-            tags: [vegan, gluten_free]
-          - id: chicken_curry
+              de: Kokosmilch · Basmatireis · frischer Koriander · Limette
+              en: Coconut milk · basmati rice · fresh coriander · lime
+            tags: [vegetarian, gluten_free]
+          - id: roast_lemon_chicken
+            sold_out: true
+            price: 10.50
             name:
-              de: Hähnchen-Curry
-              en: Chicken curry
+              de: Zitronen-Hähnchen aus dem Ofen
+              en: Roast lemon chicken
             description:
-              de: Basmatireis · Kräuter · Joghurt
-              en: Basmati rice · herbs · yoghurt
+              de: Rosmarinkartoffeln · grüne Bohnen · Zitronenjus
+              en: Rosemary potatoes · green beans · lemon jus
             tags: [kosher]
       - id: coffee_break
+        price: 5.00
         title:
           de: Kaffeepause
           en: Coffee break
@@ -86,14 +149,16 @@ days:
         until: "16:00"
         items:
           - id: cake
+            price: 3.50
             name:
-              de: Kuchen & Gebäck
-              en: Cake & pastries
+              de: Apfel-Walnuss-Streuselkuchen
+              en: Apple & walnut crumble cake
             description:
-              de: Mit veganer Alternative
-              en: Vegan option available
+              de: Zimtäpfel · knusprige Butterstreusel · Vanillesahne
+              en: Cinnamon apples · crisp butter crumble · vanilla cream
             tags: [vegetarian]
       - id: dinner
+        price: 18.00
         title:
           de: Abendessen
           en: Dinner
@@ -104,17 +169,28 @@ days:
         until: "20:00"
         items:
           - id: levantine_buffet
+            price: 18.00
             name:
-              de: Levantinisches Buffet
-              en: Levantine buffet
+              de: Auberginen aus dem Ofen & Mezze
+              en: Roasted aubergines & mezze
             description:
-              de: Mezze · Fladenbrot · Salate
-              en: Mezze · flatbread · salads
+              de: Granatapfel · cremiger Hummus · Taboulé · warmes Fladenbrot
+              en: Pomegranate · creamy hummus · tabbouleh · warm flatbread
             tags: [vegetarian]
 
   - date: "2026-10-13"
+    food_trucks:
+      - id: taco_garden
+        name: {de: Taco-Garten, en: Taco Garden}
+        description:
+          de: Warme Maistortillas mit geröstetem Blumenkohl, schwarzen Bohnen und Limettensalsa.
+          en: Warm corn tortillas with roasted cauliflower, black beans and lime salsa.
+        location: {de: Innenhof · neben dem Haupteingang, en: Courtyard · beside the main entrance}
+        from: "11:30"
+        until: "15:00"
     services:
       - id: breakfast
+        price: 9.50
         title:
           de: Frühstück
           en: Breakfast
@@ -125,22 +201,25 @@ days:
         until: "10:00"
         items:
           - id: yoghurt_granola
+            price: 4.50
             name:
-              de: Joghurt & Granola
-              en: Yoghurt & granola
+              de: Griechischer Joghurt mit Birnenkompott
+              en: Greek yoghurt with pear compote
             description:
-              de: Beeren · Honig · geröstete Kerne
-              en: Berries · honey · toasted seeds
+              de: Hausgemachtes Hafergranola · Blütenhonig · Kürbiskerne
+              en: House-made oat granola · blossom honey · pumpkin seeds
             tags: [vegetarian]
-          - id: overnight_oats
+          - id: breakfast_bagel
+            price: 4.50
             name:
-              de: Overnight Oats
-              en: Overnight oats
+              de: Frühstücksbagel mit Kräuterfrischkäse
+              en: Herb cream cheese breakfast bagel
             description:
-              de: Hafer · Apfel · Zimt
-              en: Oats · apple · cinnamon
-            tags: [vegan]
+              de: Gurke · Radieschen · Gartenkresse · Sesambagel
+              en: Cucumber · radishes · garden cress · sesame bagel
+            tags: [vegetarian]
       - id: lunch
+        price: 12.50
         title:
           de: Mittagessen
           en: Lunch
@@ -151,14 +230,16 @@ days:
         until: "14:00"
         items:
           - id: couscous
+            price: 9.00
             name:
-              de: Couscous & Ofengemüse
-              en: Couscous & roasted vegetables
+              de: Perlcouscous mit Ofengemüse & Feta
+              en: Pearl couscous with roasted vegetables & feta
             description:
-              de: Kräuter · Zitrone · Tahini
-              en: Herbs · lemon · tahini
-            tags: [vegan]
+              de: Zucchini · Paprika · Minze · Zitronen-Tahini-Dressing
+              en: Courgette · peppers · mint · lemon tahini dressing
+            tags: [vegetarian]
       - id: coffee_break
+        price: 5.00
         title:
           de: Kaffeepause
           en: Coffee break
@@ -169,14 +250,19 @@ days:
         until: "16:00"
         items:
           - id: pastries
+            price: 3.50
             name:
-              de: Gebäck & Obst
-              en: Pastries & fruit
+              de: Zitronen-Mohn-Küchlein
+              en: Lemon & poppy seed cakes
+            description:
+              de: Zitronenglasur · saftiger Rührteig · frische Trauben
+              en: Lemon glaze · soft sponge · fresh grapes
             tags: [vegetarian]
 
   - date: "2026-10-14"
     services:
       - id: lunch
+        price: 12.50
         title:
           de: Mittagessen
           en: Lunch
@@ -187,14 +273,17 @@ days:
         until: "13:30"
         items:
           - id: mushroom_ragout
+            price: 10.00
             name:
-              de: Pilzragout
-              en: Mushroom ragout
+              de: Waldpilzragout mit Kartoffelstampf
+              en: Woodland mushroom ragout with mashed potatoes
             description:
-              de: Kartoffelpüree · Petersilie
-              en: Mashed potatoes · parsley
+              de: Champignons · Kräuterseitlinge · Thymianrahm · Schnittlauch
+              en: Button & king oyster mushrooms · thyme cream · chives
             tags: [vegetarian, gluten_free]
       - id: farewell
+        sold_out: true
+        price: 3.00
         title:
           de: Farewell Snack
           en: Farewell snack
@@ -205,7 +294,11 @@ days:
         until: "16:00"
         items:
           - id: takeaway
+            price: 3.00
             name:
-              de: Obst & Müsliriegel
-              en: Fruit & granola bars
+              de: Hafer-Aprikosen-Riegel & Apfel
+              en: Oat & apricot bar with an apple
+            description:
+              de: Getrocknete Aprikosen · Sonnenblumenkerne · einzeln verpackt
+              en: Dried apricots · sunflower seeds · individually wrapped
             tags: [vegetarian]

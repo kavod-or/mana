@@ -1,10 +1,13 @@
-.PHONY: test run build docker-up docker-down
+.PHONY: test run dev build docker-up docker-down
 
 test:
 	go test ./...
 
 run:
 	go run .
+
+dev:
+	MENU_PATH=content/menu.yaml go tool -modfile=dev.mod air --build.include_ext "go,html,css,js,yaml"
 
 build:
 	go build -o bin/mana .

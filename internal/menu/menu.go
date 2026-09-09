@@ -3,6 +3,7 @@ package menu
 import (
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -26,25 +27,44 @@ type Conference struct {
 }
 
 type Permanent struct {
+	Coffee []Item `yaml:"coffee"`
 	Drinks []Item `yaml:"drinks"`
 	Snacks []Item `yaml:"snacks"`
 }
 
 type Day struct {
-	Date     string    `yaml:"date"`
-	Services []Service `yaml:"services"`
+	FoodTrucks []FoodTruck `yaml:"food_trucks"`
+	Date       string      `yaml:"date"`
+	Services   []Service   `yaml:"services"`
+}
+
+type FoodTruck struct {
+	ID          string    `yaml:"id"`
+	Name        Localized `yaml:"name"`
+	Description Localized `yaml:"description"`
+	Location    Localized `yaml:"location"`
+	From        string    `yaml:"from"`
+	Until       string    `yaml:"until"`
 }
 
 type Service struct {
-	ID       string    `yaml:"id"`
-	Title    Localized `yaml:"title"`
-	Subtitle Localized `yaml:"subtitle"`
-	From     string    `yaml:"from"`
-	Until    string    `yaml:"until"`
-	Items    []Item    `yaml:"items"`
+	SoldOut     bool      `yaml:"sold_out"`
+	PriceNormal *Price    `yaml:"price_normal"`
+	PriceLarge  *Price    `yaml:"price_large"`
+	Price       *Price    `yaml:"price"`
+	ID          string    `yaml:"id"`
+	Title       Localized `yaml:"title"`
+	Subtitle    Localized `yaml:"subtitle"`
+	From        string    `yaml:"from"`
+	Until       string    `yaml:"until"`
+	Items       []Item    `yaml:"items"`
 }
 
 type Item struct {
+	SoldOut     bool        `yaml:"sold_out"`
+	PriceNormal *Price      `yaml:"price_normal"`
+	PriceLarge  *Price      `yaml:"price_large"`
+	Price       *Price      `yaml:"price"`
 	ID          string      `yaml:"id"`
 	Name        Localized   `yaml:"name"`
 	Description Localized   `yaml:"description"`
@@ -59,6 +79,13 @@ func Decode(reader io.Reader) (Config, error) {
 	var config Config
 	if err := decoder.Decode(&config); err != nil {
 		return Config{}, fmt.Errorf("decode menu YAML: %w", err)
+	}
+	var extra any
+	if err := decoder.Decode(&extra); err != io.EOF {
+		if err != nil {
+			return Config{}, fmt.Errorf("decode trailing menu YAML: %w", err)
+		}
+		return Config{}, fmt.Errorf("menu must contain exactly one YAML document")
 	}
 	if err := config.Validate(); err != nil {
 		return Config{}, err
@@ -78,6 +105,11 @@ func (config Config) Validate() error {
 			return fmt.Errorf("tag ID is required")
 		}
 		if err := validateLocalized(fmt.Sprintf("tags.%s", id), label); err != nil {
+			return err
+		}
+	}
+	for index, item := range config.Permanent.Coffee {
+		if err := config.validateItem(fmt.Sprintf("permanent.coffee[%d]", index), item); err != nil {
 			return err
 		}
 	}
@@ -108,8 +140,36 @@ func (config Config) Validate() error {
 			return fmt.Errorf("days[%d] must contain at least one service", dayIndex)
 		}
 
+		seenTrucks := make(map[string]bool)
+		for truckIndex, truck := range day.FoodTrucks {
+			path := fmt.Sprintf("days[%d].food_trucks[%d]", dayIndex, truckIndex)
+			if truck.ID == "" || seenTrucks[truck.ID] {
+				return fmt.Errorf("%s.id must be non-empty and unique within the day", path)
+			}
+			seenTrucks[truck.ID] = true
+			for _, field := range []struct {
+				name  string
+				value Localized
+			}{{"name", truck.Name}, {"description", truck.Description}, {"location", truck.Location}} {
+				if err := validateLocalized(path+"."+field.name, field.value); err != nil {
+					return err
+				}
+			}
+			if err := validateTime(path+".from", truck.From); err != nil {
+				return err
+			}
+			if err := validateTime(path+".until", truck.Until); err != nil {
+				return err
+			}
+			if truck.Until <= truck.From {
+				return fmt.Errorf("%s.until must be after from on the same day", path)
+			}
+		}
 		for serviceIndex, service := range day.Services {
 			path := fmt.Sprintf("days[%d].services[%d]", dayIndex, serviceIndex)
+			if err := validatePrices(path, service.Price, service.PriceNormal, service.PriceLarge); err != nil {
+				return err
+			}
 			if service.ID == "" {
 				return fmt.Errorf("%s.id is required", path)
 			}
@@ -125,6 +185,9 @@ func (config Config) Validate() error {
 			if err := validateTime(path+".until", service.Until); err != nil {
 				return err
 			}
+			if service.Until <= service.From {
+				return fmt.Errorf("%s.until must be after from on the same day", path)
+			}
 			for itemIndex, item := range service.Items {
 				if err := config.validateItem(fmt.Sprintf("%s.items[%d]", path, itemIndex), item); err != nil {
 					return err
@@ -136,6 +199,9 @@ func (config Config) Validate() error {
 }
 
 func (config Config) validateItem(path string, item Item) error {
+	if err := validatePrices(path, item.Price, item.PriceNormal, item.PriceLarge); err != nil {
+		return err
+	}
 	if item.ID == "" {
 		return fmt.Errorf("%s.id is required", path)
 	}
@@ -159,7 +225,7 @@ func (config Config) validateItem(path string, item Item) error {
 }
 
 func validateLocalized(path string, value Localized) error {
-	if value.DE == "" || value.EN == "" {
+	if strings.TrimSpace(value.DE) == "" || strings.TrimSpace(value.EN) == "" {
 		return fmt.Errorf("%s requires both de and en", path)
 	}
 	return nil
@@ -175,6 +241,13 @@ func validateOptionalLocalized(path string, value Localized) error {
 func validateTime(path, value string) error {
 	if _, err := time.Parse("15:04", value); err != nil {
 		return fmt.Errorf("%s must use HH:MM", path)
+	}
+	return nil
+}
+
+func validatePrices(path string, single, normal, large *Price) error {
+	if single != nil && (normal != nil || large != nil) {
+		return fmt.Errorf("%s: use either price or price_normal/price_large", path)
 	}
 	return nil
 }

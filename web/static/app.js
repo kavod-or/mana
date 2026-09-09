@@ -9,12 +9,14 @@
     de: {
       languageLabel: "Sprache wählen",
       dayLabel: "Konferenztage",
+      topicLabel: "Direkt zu",
       locale: "de-DE",
       today: "Heute",
     },
     en: {
       languageLabel: "Choose language",
       dayLabel: "Conference days",
+      topicLabel: "Jump to",
       locale: "en-GB",
       today: "Today",
     },
@@ -60,6 +62,7 @@
     });
     document.querySelector(".language-switch").setAttribute("aria-label", copy.languageLabel);
     document.querySelector(".day-switcher").setAttribute("aria-label", copy.dayLabel);
+    document.querySelectorAll(".topic-nav").forEach((nav) => nav.setAttribute("aria-label", copy.topicLabel));
     formatDates(language);
   }
 
@@ -77,5 +80,15 @@
   languageButtons.forEach((button) => button.addEventListener("click", () => setLanguage(button.dataset.language)));
   dayButtons.forEach((button) => button.addEventListener("click", () => selectDay(button.dataset.dayButton)));
 
+  function restoreTopic() {
+    const target = document.getElementById(location.hash.slice(1));
+    const panel = target?.closest("[data-day-panel]");
+    if (!panel) return;
+    selectDay(panel.dataset.dayPanel);
+    target.scrollIntoView();
+  }
+
+  window.addEventListener("hashchange", restoreTopic);
   setLanguage(readLanguage());
+  restoreTopic();
 })();

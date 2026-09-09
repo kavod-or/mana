@@ -7,8 +7,8 @@
   <meta name="description" content="Mana - The menu plan">
   <title>Mana · AWFK 2026</title>
   <link rel="icon" href="/static/favicon.png?v=2" type="image/png" sizes="64x64">
-  <link rel="stylesheet" href="/static/styles.css?v=3">
-  <script src="/static/app.js?v=2" defer></script>
+  <link rel="stylesheet" href="/static/styles.css?v=12">
+  <script src="/static/app.js?v=4" defer></script>
 </head>
 <body>
   <div class="site-shell">
@@ -47,9 +47,15 @@
 
     {{range $dayIndex, $day := .Days}}
     <main class="day-panel{{if eq $dayIndex 0}} is-active{{end}}" data-day-panel="{{$dayIndex}}" {{if ne $dayIndex 0}}hidden{{end}}>
+      <nav class="topic-nav" aria-label="Direkt zu">
+        <a href="#meals-{{$dayIndex}}"><span data-lang-content="de">Essen</span><span data-lang-content="en" hidden>Meals</span></a>
+        {{if .FoodTrucks}}<a href="#trucks-{{$dayIndex}}">Food Trucks</a>{{end}}
+        {{if or $.Permanent.Coffee $.Permanent.Drinks $.Permanent.Snacks}}<a href="#refreshments-{{$dayIndex}}"><span data-lang-content="de">Getränke &amp; Snacks</span><span data-lang-content="en" hidden>Drinks &amp; Snacks</span></a>{{end}}
+        <a href="#schedule-{{$dayIndex}}"><span data-lang-content="de">Tagesplan</span><span data-lang-content="en" hidden>Schedule</span></a>
+      </nav>
       {{with index $day.Services 0}}
       <section class="overview-grid">
-        <article class="focus-card">
+        <article class="focus-card" id="meals-{{$dayIndex}}" tabindex="-1">
           <div class="focus-topline">
             <span class="live-dot" aria-hidden="true"></span>
             <span data-lang-content="de">Im Fokus</span>
@@ -60,6 +66,7 @@
             <span data-lang-content="de">{{.Title.DE}}</span>
             <span data-lang-content="en" hidden>{{.Title.EN}}</span>
           </h2>
+          {{template "availability" .}}
           <p class="focus-subtitle">
             <span data-lang-content="de">{{.Subtitle.DE}}</span>
             <span data-lang-content="en" hidden>{{.Subtitle.EN}}</span>
@@ -73,6 +80,7 @@
                   <span data-lang-content="de">{{.Name.DE}}</span>
                   <span data-lang-content="en" hidden>{{.Name.EN}}</span>
                 </h3>
+                {{template "availability" .}}
                 {{if or .Description.DE .Description.EN}}
                 <p>
                   <span data-lang-content="de">{{.Description.DE}}</span>
@@ -90,7 +98,28 @@
           </div>
         </article>
 
-        <aside class="always-card">
+        <div class="side-column">
+          {{if $day.FoodTrucks}}
+          <section id="trucks-{{$dayIndex}}" tabindex="-1" class="food-trucks" aria-labelledby="food-trucks-title-{{$dayIndex}}">
+            <div class="section-heading">
+              <p class="eyebrow"><span data-lang-content="de">Zusätzlich vor Ort</span><span data-lang-content="en" hidden>More to enjoy</span></p>
+              <h2 id="food-trucks-title-{{$dayIndex}}">Food Trucks</h2>
+            </div>
+            <div class="food-truck-grid">
+              {{range $day.FoodTrucks}}
+              <article class="food-truck-card">
+                <p class="food-truck-time"><time datetime="{{.From}}">{{.From}}</time>–<time datetime="{{.Until}}">{{.Until}}</time></p>
+                <h3><span data-lang-content="de">{{.Name.DE}}</span><span data-lang-content="en" hidden>{{.Name.EN}}</span></h3>
+                <p><span data-lang-content="de">{{.Description.DE}}</span><span data-lang-content="en" hidden>{{.Description.EN}}</span></p>
+                <p class="food-truck-location"><span data-lang-content="de">Standort: {{.Location.DE}}</span><span data-lang-content="en" hidden>Location: {{.Location.EN}}</span></p>
+              </article>
+              {{end}}
+            </div>
+          </section>
+          {{end}}
+
+        {{if or $.Permanent.Coffee $.Permanent.Drinks $.Permanent.Snacks}}
+        <aside class="always-card" id="refreshments-{{$dayIndex}}" tabindex="-1">
           <div class="card-heading">
             <div>
               <p class="eyebrow">
@@ -98,41 +127,61 @@
                 <span data-lang-content="en" hidden>All day</span>
               </p>
               <h2>
-                <span data-lang-content="de">Immer da</span>
-                <span data-lang-content="en" hidden>Always available</span>
+                <span data-lang-content="de">Getränke &amp; Snacks</span>
+                <span data-lang-content="en" hidden>Drinks &amp; Snacks</span>
               </h2>
             </div>
             <span class="availability-mark" aria-hidden="true"></span>
           </div>
 
-          <div class="always-group">
+          {{if $.Permanent.Coffee}}
+          <div class="always-group" id="coffee-{{$dayIndex}}" tabindex="-1">
+            <h3>
+              <span data-lang-content="de">Kaffee</span>
+              <span data-lang-content="en" hidden>Coffee</span>
+            </h3>
+            <ul>
+              {{range $.Permanent.Coffee}}
+              <li><span data-lang-content="de">{{.Name.DE}}</span><span data-lang-content="en" hidden>{{.Name.EN}}</span>{{template "availability" .}}</li>
+              {{end}}
+            </ul>
+          </div>
+          {{end}}
+
+          {{if $.Permanent.Drinks}}
+          <div class="always-group" id="drinks-{{$dayIndex}}" tabindex="-1">
             <h3>
               <span data-lang-content="de">Getränke</span>
               <span data-lang-content="en" hidden>Drinks</span>
             </h3>
             <ul>
               {{range $.Permanent.Drinks}}
-              <li><span data-lang-content="de">{{.Name.DE}}</span><span data-lang-content="en" hidden>{{.Name.EN}}</span></li>
+              <li><span data-lang-content="de">{{.Name.DE}}</span><span data-lang-content="en" hidden>{{.Name.EN}}</span>{{template "availability" .}}</li>
               {{end}}
             </ul>
           </div>
+          {{end}}
 
-          <div class="always-group">
+          {{if $.Permanent.Snacks}}
+          <div class="always-group" id="snacks-{{$dayIndex}}" tabindex="-1">
             <h3>
               <span data-lang-content="de">Snacks</span>
               <span data-lang-content="en" hidden>Snacks</span>
             </h3>
             <ul>
               {{range $.Permanent.Snacks}}
-              <li><span data-lang-content="de">{{.Name.DE}}</span><span data-lang-content="en" hidden>{{.Name.EN}}</span></li>
+              <li><span data-lang-content="de">{{.Name.DE}}</span><span data-lang-content="en" hidden>{{.Name.EN}}</span>{{template "availability" .}}</li>
               {{end}}
             </ul>
           </div>
+          {{end}}
         </aside>
+        {{end}}
+        </div>
       </section>
       {{end}}
 
-      <section class="schedule" aria-labelledby="schedule-title-{{$dayIndex}}">
+      <section id="schedule-{{$dayIndex}}" tabindex="-1" class="schedule" aria-labelledby="schedule-title-{{$dayIndex}}">
         <div class="section-heading">
           <p class="eyebrow">
             <span data-lang-content="de">Programm</span>
@@ -150,11 +199,13 @@
             <div class="timeline-time"><time>{{.From}}</time><span>– {{.Until}}</span></div>
             <div class="timeline-content">
               <h3><span data-lang-content="de">{{.Title.DE}}</span><span data-lang-content="en" hidden>{{.Title.EN}}</span></h3>
+              {{template "availability" .}}
               <p><span data-lang-content="de">{{.Subtitle.DE}}</span><span data-lang-content="en" hidden>{{.Subtitle.EN}}</span></p>
               <div class="timeline-dishes">
                 {{range .Items}}
                 <div>
                   <strong><span data-lang-content="de">{{.Name.DE}}</span><span data-lang-content="en" hidden>{{.Name.EN}}</span></strong>
+                  {{template "availability" .}}
                   {{if or .Description.DE .Description.EN}}<small><span data-lang-content="de">{{.Description.DE}}</span><span data-lang-content="en" hidden>{{.Description.EN}}</span></small>{{end}}
                 </div>
                 {{end}}
@@ -179,3 +230,9 @@
   </div>
 </body>
 </html>
+
+{{define "price"}}{{if .}}<span class="price"><span data-lang-content="de">{{.German}}</span><span data-lang-content="en" hidden>{{.English}}</span></span>{{end}}{{end}}
+
+{{define "prices"}}{{if or .PriceNormal .PriceLarge}}<span class="size-prices">{{if .PriceNormal}}<span class="size-price"><span data-lang-content="de">Normal</span><span data-lang-content="en" hidden>Regular</span>{{template "price" .PriceNormal}}</span>{{end}}{{if .PriceLarge}}<span class="size-price"><span data-lang-content="de">Groß</span><span data-lang-content="en" hidden>Large</span>{{template "price" .PriceLarge}}</span>{{end}}</span>{{else}}{{template "price" .Price}}{{end}}{{end}}
+
+{{define "availability"}}{{if .SoldOut}}<span class="sold-out"><span data-lang-content="de">Ausverkauft</span><span data-lang-content="en" hidden>Sold out</span></span>{{else}}{{template "prices" .}}{{end}}{{end}}
