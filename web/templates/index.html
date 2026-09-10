@@ -49,7 +49,7 @@
     <main class="day-panel{{if eq $dayIndex 0}} is-active{{end}}" data-day-panel="{{$dayIndex}}" {{if ne $dayIndex 0}}hidden{{end}}>
       <nav class="topic-nav" aria-label="Direkt zu">
         <a href="#meals-{{$dayIndex}}">{{template "localized" (ui "meals" $.Conference)}}</a>
-        {{if .FoodTrucks}}<a href="#trucks-{{$dayIndex}}">Food Trucks</a>{{end}}
+        {{if .FoodTrucks}}<a href="#trucks-{{$dayIndex}}">{{template "localized" (ui "food_trucks" $.Conference)}}</a>{{end}}
         {{if or $.Permanent.Coffee $.Permanent.Drinks $.Permanent.Snacks}}<a href="#refreshments-{{$dayIndex}}">{{template "localized" (ui "refreshments" $.Conference)}}</a>{{end}}
         <a href="#schedule-{{$dayIndex}}">{{template "localized" (ui "schedule" $.Conference)}}</a>
       </nav>
@@ -99,7 +99,7 @@
           <section id="trucks-{{$dayIndex}}" tabindex="-1" class="food-trucks" aria-labelledby="food-trucks-title-{{$dayIndex}}">
             <div class="section-heading">
               <p class="eyebrow">{{template "localized" (ui "more" $.Conference)}}</p>
-              <h2 id="food-trucks-title-{{$dayIndex}}">Food Trucks</h2>
+              <h2 id="food-trucks-title-{{$dayIndex}}">{{template "localized" (ui "food_trucks" $.Conference)}}</h2>
             </div>
             <div class="food-truck-grid">
               {{range $day.FoodTrucks}}

@@ -360,6 +360,11 @@ func (localized Localized) Text(language string) string {
 	if value := localized.Exact(language); value != "" {
 		return value
 	}
+	if primary := strings.SplitN(language, "-", 2)[0]; primary != language {
+		if value := localized.Exact(primary); value != "" {
+			return value
+		}
+	}
 	if localized.EN != "" {
 		return localized.EN
 	}

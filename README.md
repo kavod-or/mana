@@ -31,18 +31,18 @@ Configure lowercase language codes under `conference.languages`, in display and 
 
 ```yaml
 conference:
-  languages: [de, en, fr]
+  languages: [de, en, ru]
   name:
     de: Beispiel Konferenz
     en: Example Conference
-    fr: Conférence exemple
+    ru: Пример конференции
 
 # The same language keys are used throughout the menu, for example in tags:
 tags:
   vegetarian:
     de: Vegetarisch
     en: Vegetarian
-    fr: Végétarien
+    ru: Вегетарианское
 ```
 
 Language codes may include subtags such as `pt-br`. Mana includes interface labels for German, English, and Russian; other languages fall back to English, while menu content is always required in every configured language. Prices use localized formatting for German, Spanish, French, Italian, Dutch, Portuguese, and Russian, and English-style formatting for other languages.
@@ -121,7 +121,7 @@ For optional size prices, replace an item's `price` with either or both size fie
   price_large: 4.20
 ```
 
-Size labels use German text for German and English text for other interface languages. Missing or null sizes are hidden, and zero is displayed. Do not combine a single `price` with size prices on the same item.
+Size labels are translated into German, English, and Russian, with English as the fallback for other interface languages. Missing or null sizes are hidden, and zero is displayed. Do not combine a single `price` with size prices on the same item.
 
 ## Food trucks
 
@@ -153,7 +153,7 @@ Add `sold_out: true` to any service (whole meal) or item, including coffee, drin
   sold_out: true
 ```
 
-The item stays visible with an **Ausverkauft / Sold out** badge in place of its prices. Set `sold_out: false` or remove the field to restore normal display. A meal flag labels the whole service; individual item flags are independent. With `CONTENT_DIR` enabled, changes reload with the menu.
+The item stays visible with a localized sold-out badge in place of its prices. Set `sold_out: false` or remove the field to restore normal display. A meal flag labels the whole service; individual item flags are independent. With `CONTENT_DIR` enabled, changes reload with the menu.
 
 ## Development with automatic reload
 

@@ -240,6 +240,17 @@ func TestAdditionalLanguageRenders(t *testing.T) {
 	}
 }
 
+func TestRussianInterfaceTextIsComplete(t *testing.T) {
+	for key, value := range interfaceText {
+		if got := value.Exact("ru"); got == "" {
+			t.Errorf("interface text %q has no Russian translation", key)
+		}
+	}
+	if got := interfaceText["all_day"].Text("ru-ru"); got != "Весь день" {
+		t.Errorf("regional Russian fallback = %q", got)
+	}
+}
+
 func TestSizePricesRender(t *testing.T) {
 	normal, large := menu.Price(0), menu.Price(420)
 	config := menu.Config{Days: []menu.Day{{Services: []menu.Service{{Items: []menu.Item{{PriceNormal: &normal, PriceLarge: &large}}}}}}, Permanent: menu.Permanent{Coffee: []menu.Item{{PriceNormal: &normal}, {PriceLarge: &large}}}}

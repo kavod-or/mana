@@ -43,7 +43,6 @@ type availabilityView struct {
 type statusView struct {
 	SoldOut    bool
 	Conference menu.Conference
-	Languages  []string
 }
 
 type priceView struct {
@@ -55,6 +54,7 @@ var interfaceText = map[string]menu.Localized{
 	"meals":        interfaceTranslation("Essen", "Meals", "Еда"),
 	"refreshments": interfaceTranslation("Getränke & Snacks", "Drinks & Snacks", "Напитки и закуски"),
 	"schedule":     interfaceTranslation("Tagesplan", "Schedule", "Расписание"),
+	"food_trucks":  interfaceTranslation("Food Trucks", "Food Trucks", "Фудтраки"),
 	"more":         interfaceTranslation("Zusätzlich vor Ort", "More to enjoy", "Также на месте"),
 	"location":     interfaceTranslation("Standort", "Location", "Место"),
 	"all_day":      interfaceTranslation("Durchgehend", "All day", "Весь день"),
@@ -103,7 +103,7 @@ func NewDynamic(events EventsLoader, templates fs.FS, static fs.FS, content fs.F
 			return availabilityView{Item: item, Conference: conference, Languages: conference.LanguageCodes()}
 		},
 		"status": func(soldOut bool, conference menu.Conference) statusView {
-			return statusView{SoldOut: soldOut, Conference: conference, Languages: conference.LanguageCodes()}
+			return statusView{SoldOut: soldOut, Conference: conference}
 		},
 		"priceView": func(price *menu.Price, languages []string) priceView {
 			return priceView{Price: price, Languages: languages}

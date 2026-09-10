@@ -77,6 +77,15 @@ func TestAdditionalLanguages(t *testing.T) {
 	}
 }
 
+func TestLocalizedTextUsesBaseLanguageForInterfaceFallbacks(t *testing.T) {
+	value := Localized{DE: "Deutsch", EN: "English", Other: map[string]string{"ru": "Русский"}}
+	for language, want := range map[string]string{"de-de": "Deutsch", "en-gb": "English", "ru-ru": "Русский", "fr-fr": "English"} {
+		if got := value.Text(language); got != want {
+			t.Errorf("Text(%q) = %q, want %q", language, got, want)
+		}
+	}
+}
+
 func TestConferenceLogo(t *testing.T) {
 	for _, filename := range []string{"brand.png", "logos/brand.JPEG", "brand.webp", "brand.gif", "brand.avif"} {
 		source := strings.Replace(validMenu, "conference:", "conference:\n  logo: "+filename, 1)
@@ -162,6 +171,9 @@ func TestOptionalPrices(t *testing.T) {
 			want := map[string][2]string{"12.50": {"12,50\u00a0€", "€12.50"}, "0": {"0,00\u00a0€", "€0.00"}, "1234.5": {"1.234,50\u00a0€", "€1,234.50"}}[value]
 			if meal.German() != want[0] || meal.English() != want[1] {
 				t.Fatalf("unexpected formatting: %s / %s", meal.German(), meal.English())
+			}
+			if value == "1234.5" && meal.Localized("ru") != "1\u00a0234,50\u00a0€" {
+				t.Fatalf("unexpected Russian formatting: %s", meal.Localized("ru"))
 			}
 		})
 	}

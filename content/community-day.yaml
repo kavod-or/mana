@@ -1,6 +1,6 @@
 # Optional prices in EUR: add price: 12.50 to an item.
 # Omit price (or use null) to hide it; price: 0 displays zero.
-# Add sold_out: true to any meal or item to show Ausverkauft / Sold out.
+# Add sold_out: true to any meal or item to show the localized sold-out label.
 conference:
   # Add language codes here and provide each translation throughout this file.
   languages: [de, en]
