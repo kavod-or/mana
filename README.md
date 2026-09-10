@@ -1,12 +1,12 @@
 # Mana
 
-Mana is a small, responsive conference catering guide. It supports multiple events, each with its own menu URL, scheduled meals, food trucks, coffee, drinks, and snacks. German and English are fully supported.
+Mana is a small, responsive conference catering guide. It supports multiple events, each with its own menu URL, scheduled meals, food trucks, coffee, drinks, snacks, and configurable languages.
 
 ## Features
 
 - responsive and accessible design without a frontend framework
 - server-rendered HTML
-- DE/EN switch that follows the browser's language preferences and falls back to German
+- configurable language switch that matches the browser language and otherwise defaults to the first configured language
 - separate event URLs mapped to menu files in `content/events.yaml`
 - YAML as the single source of truth for menu content
 - templates and assets embedded in one Go binary
@@ -25,13 +25,27 @@ The example event is available at [http://localhost:8080/example-conference](htt
 
 ## Edit the menu
 
-Each event has its own menu file, selected by `content/events.yaml`. The example conference uses `content/menu.yaml`, and the community event uses `content/community-day.yaml`. Names and descriptions have German and English variants:
+Each event has its own menu file, selected by `content/events.yaml`. The example conference uses `content/menu.yaml`, and the community event uses `content/community-day.yaml`.
+
+Configure lowercase language codes under `conference.languages`, in display and fallback order. If omitted, Mana uses `[de, en]`. Every translated name, description, title, subtitle, tag, and configured payment notice must contain all configured languages:
 
 ```yaml
-name:
-  de: Gemüse-Curry
-  en: Vegetable curry
+conference:
+  languages: [de, en, fr]
+  name:
+    de: Beispiel Konferenz
+    en: Example Conference
+    fr: Conférence exemple
+
+# The same language keys are used throughout the menu, for example in tags:
+tags:
+  vegetarian:
+    de: Vegetarisch
+    en: Vegetarian
+    fr: Végétarien
 ```
+
+Language codes may include subtags such as `pt-br`. Mana includes interface labels for German, English, and Russian; other languages fall back to English, while menu content is always required in every configured language. Prices use localized formatting for German, Spanish, French, Italian, Dutch, Portuguese, and Russian, and English-style formatting for other languages.
 
 Docker Compose bind-mounts the `content` directory from the host. Edit the relevant event's menu file with any host-side editor. Mana checks for updates at most twice per second, so no container restart or rebuild is required. If an edit temporarily produces invalid YAML, Mana keeps serving the most recent valid menu.
 
@@ -94,7 +108,7 @@ Add `price` to an individual meal item or a permanent coffee/drink/snack in the 
 
 Prices are euro amounts with a decimal point and at most two decimal places. Negative amounts and invalid values are rejected. Omit `price` or set it to `null` to hide it; `price: 0` explicitly displays zero.
 
-The language switch displays German (`12,50 €`) or English (`€12.50`) formatting in the featured meal, full schedule, drinks, and snacks. External menu prices reload just like other menu content.
+The language switch localizes prices in the featured meal, full schedule, drinks, and snacks. External menu prices reload just like other menu content.
 
 Coffee is configured separately under `permanent.coffee`, other drinks under `permanent.drinks`, and snacks under `permanent.snacks`. Coffee items support the same optional prices and translations. The Coffee section is hidden when its list is empty.
 
@@ -107,7 +121,7 @@ For optional size prices, replace an item's `price` with either or both size fie
   price_large: 4.20
 ```
 
-Size labels are Normal/Groß in German and Regular/Large in English. Missing or null sizes are hidden, and zero is displayed. Do not combine a single `price` with size prices on the same item.
+Size labels use German text for German and English text for other interface languages. Missing or null sizes are hidden, and zero is displayed. Do not combine a single `price` with size prices on the same item.
 
 ## Food trucks
 
@@ -126,7 +140,7 @@ Add an optional `food_trucks` list to each entry in `days`, alongside `services`
     # Existing conference meals go here.
 ```
 
-Add as many trucks as needed per day, using unique IDs within that day. Names, descriptions, and locations require both German and English. Times use `HH:MM`, with `until` later than `from` on the same day. Trucks appear in a separate section for the selected day. Omit `food_trucks` or use `food_trucks: []` to hide that day's section.
+Add as many trucks as needed per day, using unique IDs within that day. Names, descriptions, and locations require every configured language. Times use `HH:MM`, with `until` later than `from` on the same day. Trucks appear in a separate section for the selected day. Omit `food_trucks` or use `food_trucks: []` to hide that day's section.
 
 ## Sold out
 
@@ -173,7 +187,7 @@ Event URLs are intentionally public and require no login or access token. Anyone
 
 ## Payment information
 
-Add an optional bilingual `payment` notice under `conference` in an event's menu:
+Add an optional translated `payment` notice under `conference` in an event's menu:
 
 ```yaml
 conference:
@@ -183,7 +197,7 @@ conference:
   # Keep the existing name, location, and timezone fields.
 ```
 
-The notice appears below the event name, stays visible across days, and follows the language switch. Use any wording, such as `Kartenzahlung möglich` / `Card payment accepted` or `Bar- und Kartenzahlung` / `Cash and card accepted`. Both translations are required when configured. Omit `payment` to hide the notice. With `CONTENT_DIR`, edit the menu and reload the page to see changes.
+The notice appears below the event name, stays visible across days, and follows the language switch. Every configured language is required when the notice is present. Omit `payment` to hide it. With `CONTENT_DIR`, edit the menu and reload the page to see changes.
 
 Each food truck can also have its own optional `payment` notice, shown inside its card:
 
@@ -211,4 +225,4 @@ food_trucks:
         description: {de: Mit Hummus und Salat, en: With hummus and salad}
 ```
 
-Each item requires an ID and both name translations. Prices use the same euro formatting as other menu items: omit `price` to hide it, use `0` for free items, or use `price_normal` and `price_large` for sizes. `sold_out: true` shows the sold-out badge instead of prices. Descriptions are optional and require both translations when present. Omit `items` or use `items: []` to hide the list. Both example menus include priced food truck dishes.
+Each item requires an ID and a name in every configured language. Prices use the same euro formatting as other menu items: omit `price` to hide it, use `0` for free items, or use `price_normal` and `price_large` for sizes. `sold_out: true` shows the sold-out badge instead of prices. Descriptions are optional and require every configured translation when present. Omit `items` or use `items: []` to hide the list. Both example menus include priced food truck dishes.

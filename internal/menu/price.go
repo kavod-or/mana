@@ -39,6 +39,19 @@ func (price Price) English() string {
 	return "€" + price.format(",", ".")
 }
 
+func (price Price) Localized(language string) string {
+	switch strings.SplitN(language, "-", 2)[0] {
+	case "fr":
+		return price.format("\u202f", ",") + "\u00a0€"
+	case "ru":
+		return price.format("\u00a0", ",") + "\u00a0€"
+	case "de", "es", "it", "nl", "pt":
+		return price.German()
+	default:
+		return price.English()
+	}
+}
+
 func (price Price) format(group, decimal string) string {
 	whole := strconv.FormatInt(int64(price)/100, 10)
 	for index := len(whole) - 3; index > 0; index -= 3 {

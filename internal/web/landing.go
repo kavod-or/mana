@@ -7,7 +7,7 @@ const landingPage = `<!doctype html>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mana</title>
   <link rel="icon" href="/static/favicon.png?v=2" type="image/png">
-  <link rel="stylesheet" href="/static/styles.css?v=25">
+  <link rel="stylesheet" href="/static/styles.css?v=26">
 </head>
 <body class="landing-page">
   <main class="notice-card">

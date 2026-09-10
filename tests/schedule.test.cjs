@@ -3,6 +3,39 @@ const assert = require('node:assert/strict');
 const vm = require('node:vm');
 const fs = require('node:fs');
 
+test('configured languages match browser preference and otherwise use the first option', () => {
+  for (const {browserLanguages, expected} of [
+    {browserLanguages: ['ru-RU'], expected: 'ru'},
+    {browserLanguages: ['es-ES'], expected: 'de'},
+  ]) {
+    const languages = ['de', 'en', 'ru'];
+    const buttons = languages.map((language) => ({
+      dataset: {language},
+      setAttribute(name, value) { if (name === 'aria-pressed') this.pressed = value; },
+      addEventListener() {},
+    }));
+    const content = languages.map((language) => ({dataset: {langContent: language}, hidden: language !== 'de'}));
+    const root = {lang: 'de'};
+    const document = {
+      documentElement: root,
+      body: {dataset: {timezone: 'Europe/Berlin'}},
+      querySelectorAll: (selector) => ({'[data-language]': buttons, '[data-lang-content]': content}[selector] || []),
+      querySelector: (selector) => ['.app-version', '.brand'].includes(selector) ? null : {setAttribute() {}},
+      getElementById: () => null,
+      addEventListener() {},
+    };
+    vm.runInNewContext(fs.readFileSync('web/static/app.js', 'utf8'), {
+      document, performance: {getEntriesByType: () => []}, Intl, Date,
+      navigator: {languages: browserLanguages}, location: {hash: ''},
+      window: {addEventListener() {}}, setInterval() {},
+    });
+    const selected = languages.indexOf(expected);
+    assert.equal(root.lang, expected);
+    assert.equal(content[selected].hidden, false);
+    assert.equal(buttons[selected].pressed, 'true');
+  }
+});
+
 test('conference clock selects days and meals, while preserving manual selection', () => {
   let now = '2026-10-12T10:45:00Z'; // 12:45 in Berlin
   let tick;

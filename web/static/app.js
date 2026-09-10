@@ -8,6 +8,7 @@
   const languageContent = [...document.querySelectorAll("[data-lang-content]")];
   const dayButtons = [...document.querySelectorAll("[data-day-button]")];
   const dayPanels = [...document.querySelectorAll("[data-day-panel]")];
+  const supportedLanguages = languageButtons.map((button) => button.dataset.language);
 
   let manualDay = false;
   const clock = new Intl.DateTimeFormat("en-GB", {
@@ -26,15 +27,19 @@
       languageLabel: "Sprache wählen",
       dayLabel: "Konferenztage",
       topicLabel: "Direkt zu",
-      locale: "de-DE",
       today: "Heute",
     },
     en: {
       languageLabel: "Choose language",
       dayLabel: "Conference days",
       topicLabel: "Jump to",
-      locale: "en-GB",
       today: "Today",
+    },
+    ru: {
+      languageLabel: "Выбрать язык",
+      dayLabel: "Дни конференции",
+      topicLabel: "Перейти к разделу",
+      today: "Сегодня",
     },
   };
 
@@ -44,19 +49,21 @@
       : [navigator.language];
 
     for (const language of preferredLanguages) {
-      const primaryLanguage = language?.toLowerCase().split("-")[0];
-      if (primaryLanguage === "de" || primaryLanguage === "en") {
-        return primaryLanguage;
-      }
+      const preferred = language?.toLowerCase();
+      const exact = supportedLanguages.find((supported) => supported === preferred);
+      if (exact) return exact;
+      const primary = preferred?.split("-")[0];
+      const related = supportedLanguages.find((supported) => supported.split("-")[0] === primary);
+      if (related) return related;
     }
 
-    return "de";
+    return supportedLanguages[0] || root.lang;
   }
 
   function formatDates(language) {
-    const copy = translations[language];
+    const copy = translations[language.split("-")[0]] || translations.en;
     const todayKey = conferenceNow().date;
-    const formatter = new Intl.DateTimeFormat(copy.locale, { weekday: "short", day: "numeric", month: "short" });
+    const formatter = new Intl.DateTimeFormat(language, { weekday: "short", day: "numeric", month: "short" });
 
     dayButtons.forEach((button) => {
       const dateKey = button.dataset.date;
@@ -67,8 +74,9 @@
   }
 
   function setLanguage(language) {
-    const copy = translations[language];
+    const copy = translations[language.split("-")[0]] || translations.en;
     root.lang = language;
+    root.dir = ["ar", "fa", "he", "ur"].includes(language.split("-")[0]) ? "rtl" : "ltr";
     languageContent.forEach((element) => {
       element.hidden = element.dataset.langContent !== language;
     });

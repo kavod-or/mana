@@ -28,22 +28,98 @@ type server struct {
 
 type EventsLoader func() (map[string]menu.Loader, error)
 
+type localizedView struct {
+	Value     menu.Localized
+	Languages []string
+	Present   bool
+}
+
+type availabilityView struct {
+	Item       menu.Item
+	Conference menu.Conference
+	Languages  []string
+}
+
+type statusView struct {
+	SoldOut    bool
+	Conference menu.Conference
+	Languages  []string
+}
+
+type priceView struct {
+	Price     *menu.Price
+	Languages []string
+}
+
+var interfaceText = map[string]menu.Localized{
+	"meals":        interfaceTranslation("Essen", "Meals", "Еда"),
+	"refreshments": interfaceTranslation("Getränke & Snacks", "Drinks & Snacks", "Напитки и закуски"),
+	"schedule":     interfaceTranslation("Tagesplan", "Schedule", "Расписание"),
+	"more":         interfaceTranslation("Zusätzlich vor Ort", "More to enjoy", "Также на месте"),
+	"location":     interfaceTranslation("Standort", "Location", "Место"),
+	"all_day":      interfaceTranslation("Durchgehend", "All day", "Весь день"),
+	"coffee":       interfaceTranslation("Kaffee", "Coffee", "Кофе"),
+	"drinks":       interfaceTranslation("Getränke", "Drinks", "Напитки"),
+	"snacks":       interfaceTranslation("Snacks", "Snacks", "Закуски"),
+	"program":      interfaceTranslation("Programm", "Schedule", "Программа"),
+	"full_day":     interfaceTranslation("Der ganze Tag", "The full day", "Программа на весь день"),
+	"enjoy":        interfaceTranslation("Guten Appetit!", "Enjoy your meal!", "Приятного аппетита!"),
+	"sold_out":     interfaceTranslation("Ausverkauft", "Sold out", "Распродано"),
+	"regular":      interfaceTranslation("Normal", "Regular", "Обычный"),
+	"large":        interfaceTranslation("Groß", "Large", "Большой"),
+}
+
+func interfaceTranslation(de, en, ru string) menu.Localized {
+	return menu.Localized{DE: de, EN: en, Other: map[string]string{"ru": ru}}
+}
+
 func New(events map[string]menu.Loader, templates fs.FS, static fs.FS, logger *slog.Logger) (http.Handler, error) {
 	return NewDynamic(func() (map[string]menu.Loader, error) { return events, nil }, templates, static, nil, logger)
 }
 
 func NewDynamic(events EventsLoader, templates fs.FS, static fs.FS, content fs.FS, logger *slog.Logger) (http.Handler, error) {
 	functions := template.FuncMap{
-		"version": func() string { return version.Current },
+		"version":   func() string { return version.Current },
+		"languages": func(conference menu.Conference) []string { return conference.LanguageCodes() },
+		"primary":   func(conference menu.Conference) string { return conference.LanguageCodes()[0] },
+		"direction": func(language string) string {
+			switch strings.SplitN(language, "-", 2)[0] {
+			case "ar", "fa", "he", "ur":
+				return "rtl"
+			default:
+				return "ltr"
+			}
+		},
+		"upper": strings.ToUpper,
+		"text":  func(value menu.Localized, language string) string { return value.Text(language) },
+		"localize": func(value menu.Localized, conference menu.Conference) localizedView {
+			return localizedView{Value: value, Languages: conference.LanguageCodes(), Present: !value.Empty()}
+		},
+		"ui": func(key string, conference menu.Conference) localizedView {
+			value := interfaceText[key]
+			return localizedView{Value: value, Languages: conference.LanguageCodes(), Present: true}
+		},
+		"availability": func(item menu.Item, conference menu.Conference) availabilityView {
+			return availabilityView{Item: item, Conference: conference, Languages: conference.LanguageCodes()}
+		},
+		"status": func(soldOut bool, conference menu.Conference) statusView {
+			return statusView{SoldOut: soldOut, Conference: conference, Languages: conference.LanguageCodes()}
+		},
+		"priceView": func(price *menu.Price, languages []string) priceView {
+			return priceView{Price: price, Languages: languages}
+		},
+		"formatPrice": func(price *menu.Price, language string) string {
+			if price == nil {
+				return ""
+			}
+			return price.Localized(language)
+		},
 		"tag": func(tags map[string]menu.Localized, id, language string) string {
 			value, ok := tags[id]
 			if !ok {
 				return id
 			}
-			if language == "en" {
-				return value.EN
-			}
-			return value.DE
+			return value.Text(language)
 		},
 	}
 

@@ -44,6 +44,39 @@ func TestDecodeRejectsUnknownFields(t *testing.T) {
 	}
 }
 
+func TestAdditionalLanguages(t *testing.T) {
+	source := strings.NewReplacer(
+		"conference:", "conference:\n  languages: [de, en, fr]",
+		"{de: Konferenz, en: Conference}", "{de: Konferenz, en: Conference, fr: Conférence}",
+		"{de: Foyer, en: Foyer}", "{de: Foyer, en: Foyer, fr: Hall}",
+		"{de: Vegetarisch, en: Vegetarian}", "{de: Vegetarisch, en: Vegetarian, fr: Végétarien}",
+		"{de: Wasser, en: Water}", "{de: Wasser, en: Water, fr: Eau}",
+		"{de: Mittagessen, en: Lunch}", "{de: Mittagessen, en: Lunch, fr: Déjeuner}",
+		"{de: Frisch, en: Fresh}", "{de: Frisch, en: Fresh, fr: Frais}",
+	).Replace(validMenu)
+	config, err := Decode(strings.NewReader(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := config.Conference.Name.Text("fr"); got != "Conférence" {
+		t.Fatalf("French conference name = %q", got)
+	}
+	if got := config.Conference.LanguageCodes(); len(got) != 3 || got[2] != "fr" {
+		t.Fatalf("languages = %#v", got)
+	}
+
+	missing := strings.Replace(source, ", fr: Eau", "", 1)
+	if _, err := Decode(strings.NewReader(missing)); err == nil {
+		t.Fatal("accepted menu with a missing configured translation")
+	}
+	for _, declaration := range []string{"[de, de]", "[de, FR]"} {
+		invalid := strings.Replace(validMenu, "conference:", "conference:\n  languages: "+declaration, 1)
+		if _, err := Decode(strings.NewReader(invalid)); err == nil {
+			t.Fatalf("accepted languages %s", declaration)
+		}
+	}
+}
+
 func TestConferenceLogo(t *testing.T) {
 	for _, filename := range []string{"brand.png", "logos/brand.JPEG", "brand.webp", "brand.gif", "brand.avif"} {
 		source := strings.Replace(validMenu, "conference:", "conference:\n  logo: "+filename, 1)
@@ -293,7 +326,7 @@ func TestFoodTruckPaymentValidation(t *testing.T) {
 		}
 		config.Days[0].FoodTrucks = []FoodTruck{{ID: "truck", Name: Localized{DE: "Truck", EN: "Truck"}, Description: Localized{DE: "Essen", EN: "Food"}, Location: Localized{DE: "Hof", EN: "Yard"}, From: "12:00", Until: "14:00", Payment: payment}}
 		err = config.Validate()
-		valid := payment == (Localized{}) || payment.DE == "Nur Barzahlung"
+		valid := payment.Empty() || payment.DE == "Nur Barzahlung"
 		if (err == nil) != valid {
 			t.Fatalf("payment %v: %v", payment, err)
 		}

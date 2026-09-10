@@ -207,6 +207,39 @@ func TestPricesInRealTemplate(t *testing.T) {
 	}
 }
 
+func TestAdditionalLanguageRenders(t *testing.T) {
+	price := menu.Price(450)
+	translations := func(de, en, fr, ru string) menu.Localized {
+		return menu.Localized{DE: de, EN: en, Other: map[string]string{"fr": fr, "ru": ru}}
+	}
+	config := menu.Config{
+		Conference: menu.Conference{
+			Languages: []string{"de", "en", "fr", "ru"},
+			Name:      translations("Konferenz", "Conference", "Conférence", "Конференция"),
+			Location:  translations("Foyer", "Foyer", "Hall", "Фойе"),
+		},
+		Permanent: menu.Permanent{Drinks: []menu.Item{{
+			ID: "water", Name: translations("Wasser", "Water", "Eau", "Вода"),
+		}}},
+		Days: []menu.Day{{Date: "2026-10-12", Services: []menu.Service{{
+			ID: "lunch", Title: translations("Mittagessen", "Lunch", "Déjeuner", "Обед"), Subtitle: translations("Frisch", "Fresh", "Frais", "Свежее"), From: "12:00", Until: "13:00",
+			Items: []menu.Item{{ID: "soup", Name: translations("Suppe", "Soup", "Soupe", "Суп"), Price: &price}},
+		}}}},
+	}
+	handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/test", nil))
+	body := response.Body.String()
+	for _, expected := range []string{`data-language="fr"`, `data-language="ru"`, `data-lang-content="fr" hidden>Conférence`, `data-lang-content="fr" hidden>Déjeuner`, `data-lang-content="fr" hidden>Soupe`, `data-lang-content="ru" hidden>Весь день`, `data-lang-content="ru" hidden>Напитки`, "4,50\u00a0€"} {
+		if !strings.Contains(body, expected) {
+			t.Errorf("missing %q", expected)
+		}
+	}
+}
+
 func TestSizePricesRender(t *testing.T) {
 	normal, large := menu.Price(0), menu.Price(420)
 	config := menu.Config{Days: []menu.Day{{Services: []menu.Service{{Items: []menu.Item{{PriceNormal: &normal, PriceLarge: &large}}}}}}, Permanent: menu.Permanent{Coffee: []menu.Item{{PriceNormal: &normal}, {PriceLarge: &large}}}}

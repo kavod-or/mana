@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/fs"
 	"path"
+	"regexp"
 	"strings"
 	"time"
 	_ "time/tzdata"
@@ -13,8 +14,9 @@ import (
 )
 
 type Localized struct {
-	DE string `yaml:"de"`
-	EN string `yaml:"en"`
+	DE    string            `yaml:"de"`
+	EN    string            `yaml:"en"`
+	Other map[string]string `yaml:",inline"`
 }
 
 type Config struct {
@@ -25,11 +27,12 @@ type Config struct {
 }
 
 type Conference struct {
-	Payment  Localized `yaml:"payment"`
-	TimeZone string    `yaml:"timezone"`
-	Logo     string    `yaml:"logo"`
-	Name     Localized `yaml:"name"`
-	Location Localized `yaml:"location"`
+	Payment   Localized `yaml:"payment"`
+	Languages []string  `yaml:"languages"`
+	TimeZone  string    `yaml:"timezone"`
+	Logo      string    `yaml:"logo"`
+	Name      Localized `yaml:"name"`
+	Location  Localized `yaml:"location"`
 }
 
 type Permanent struct {
@@ -106,13 +109,18 @@ func (config Config) Validate() error {
 		return fmt.Errorf("conference.timezone: %w", err)
 	}
 
-	if err := validateLocalized("conference.name", config.Conference.Name); err != nil {
+	languages, err := validateLanguages(config.Conference.Languages)
+	if err != nil {
 		return err
 	}
-	if err := validateLocalized("conference.location", config.Conference.Location); err != nil {
+
+	if err := validateLocalized("conference.name", config.Conference.Name, languages); err != nil {
 		return err
 	}
-	if err := validatePayment("conference.payment", config.Conference.Payment); err != nil {
+	if err := validateLocalized("conference.location", config.Conference.Location, languages); err != nil {
+		return err
+	}
+	if err := validatePayment("conference.payment", config.Conference.Payment, languages); err != nil {
 		return err
 	}
 	if err := validateLogo(config.Conference.Logo); err != nil {
@@ -122,7 +130,7 @@ func (config Config) Validate() error {
 		if id == "" {
 			return fmt.Errorf("tag ID is required")
 		}
-		if err := validateLocalized(fmt.Sprintf("tags.%s", id), label); err != nil {
+		if err := validateLocalized(fmt.Sprintf("tags.%s", id), label, languages); err != nil {
 			return err
 		}
 	}
@@ -170,14 +178,14 @@ func (config Config) Validate() error {
 					return err
 				}
 			}
-			if err := validatePayment(path+".payment", truck.Payment); err != nil {
+			if err := validatePayment(path+".payment", truck.Payment, languages); err != nil {
 				return err
 			}
 			for _, field := range []struct {
 				name  string
 				value Localized
 			}{{"name", truck.Name}, {"description", truck.Description}, {"location", truck.Location}} {
-				if err := validateLocalized(path+"."+field.name, field.value); err != nil {
+				if err := validateLocalized(path+"."+field.name, field.value, languages); err != nil {
 					return err
 				}
 			}
@@ -199,10 +207,10 @@ func (config Config) Validate() error {
 			if service.ID == "" {
 				return fmt.Errorf("%s.id is required", path)
 			}
-			if err := validateLocalized(path+".title", service.Title); err != nil {
+			if err := validateLocalized(path+".title", service.Title, languages); err != nil {
 				return err
 			}
-			if err := validateLocalized(path+".subtitle", service.Subtitle); err != nil {
+			if err := validateLocalized(path+".subtitle", service.Subtitle, languages); err != nil {
 				return err
 			}
 			if err := validateTime(path+".from", service.From); err != nil {
@@ -246,14 +254,15 @@ func (config Config) validateItem(path string, item Item) error {
 	if item.ID == "" {
 		return fmt.Errorf("%s.id is required", path)
 	}
-	if err := validateLocalized(path+".name", item.Name); err != nil {
+	languages := config.Conference.LanguageCodes()
+	if err := validateLocalized(path+".name", item.Name, languages); err != nil {
 		return err
 	}
-	if err := validateOptionalLocalized(path+".description", item.Description); err != nil {
+	if err := validateOptionalLocalized(path+".description", item.Description, languages); err != nil {
 		return err
 	}
 	for index, variant := range item.Variants {
-		if err := validateLocalized(fmt.Sprintf("%s.variants[%d]", path, index), variant); err != nil {
+		if err := validateLocalized(fmt.Sprintf("%s.variants[%d]", path, index), variant, languages); err != nil {
 			return err
 		}
 	}
@@ -265,25 +274,27 @@ func (config Config) validateItem(path string, item Item) error {
 	return nil
 }
 
-func validatePayment(path string, value Localized) error {
-	if value.DE == "" && value.EN == "" {
+func validatePayment(path string, value Localized, languages []string) error {
+	if value.Empty() {
 		return nil
 	}
-	return validateLocalized(path, value)
+	return validateLocalized(path, value, languages)
 }
 
-func validateLocalized(path string, value Localized) error {
-	if strings.TrimSpace(value.DE) == "" || strings.TrimSpace(value.EN) == "" {
-		return fmt.Errorf("%s requires both de and en", path)
+func validateLocalized(path string, value Localized, languages []string) error {
+	for _, language := range languages {
+		if strings.TrimSpace(value.Exact(language)) == "" {
+			return fmt.Errorf("%s requires a %s translation", path, language)
+		}
 	}
 	return nil
 }
 
-func validateOptionalLocalized(path string, value Localized) error {
-	if (value.DE == "") != (value.EN == "") {
-		return fmt.Errorf("%s requires both de and en when present", path)
+func validateOptionalLocalized(path string, value Localized, languages []string) error {
+	if value.Empty() {
+		return nil
 	}
-	return nil
+	return validateLocalized(path, value, languages)
 }
 
 func validateTime(path, value string) error {
@@ -305,4 +316,64 @@ func (conference Conference) Zone() string {
 		return "Europe/Berlin"
 	}
 	return conference.TimeZone
+}
+
+var languagePattern = regexp.MustCompile(`^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$`)
+
+func validateLanguages(configured []string) ([]string, error) {
+	languages := configured
+	if len(languages) == 0 {
+		languages = []string{"de", "en"}
+	}
+	seen := make(map[string]bool, len(languages))
+	for _, language := range languages {
+		if !languagePattern.MatchString(language) {
+			return nil, fmt.Errorf("conference.languages contains invalid language code %q", language)
+		}
+		if seen[language] {
+			return nil, fmt.Errorf("conference.languages contains duplicate language code %q", language)
+		}
+		seen[language] = true
+	}
+	return languages, nil
+}
+
+func (conference Conference) LanguageCodes() []string {
+	if len(conference.Languages) == 0 {
+		return []string{"de", "en"}
+	}
+	return conference.Languages
+}
+
+func (localized Localized) Exact(language string) string {
+	switch language {
+	case "de":
+		return localized.DE
+	case "en":
+		return localized.EN
+	default:
+		return localized.Other[language]
+	}
+}
+
+func (localized Localized) Text(language string) string {
+	if value := localized.Exact(language); value != "" {
+		return value
+	}
+	if localized.EN != "" {
+		return localized.EN
+	}
+	return localized.DE
+}
+
+func (localized Localized) Empty() bool {
+	if localized.DE != "" || localized.EN != "" {
+		return false
+	}
+	for _, value := range localized.Other {
+		if value != "" {
+			return false
+		}
+	}
+	return true
 }
