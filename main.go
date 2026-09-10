@@ -43,7 +43,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	handler, err := web.NewDynamic(events.Current, assets, staticFiles, logger, content)
+	handler, err := web.NewDynamic(events.Current, assets, staticFiles, content, logger)
 	if err != nil {
 		logger.Error("could not create web server", "error", err)
 		os.Exit(1)

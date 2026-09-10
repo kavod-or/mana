@@ -20,8 +20,8 @@ type eventEntry struct {
 }
 
 type eventRoute struct {
-	menu   string
-	loader menu.Loader
+	menuPath string
+	loader   menu.Loader
 }
 
 type eventRegistry struct {
@@ -49,14 +49,6 @@ func (root *rootedFS) Stat(name string) (fs.FileInfo, error) {
 
 func (root *rootedFS) Close() error {
 	return root.root.Close()
-}
-
-func loadEvents() (map[string]menu.Loader, error) {
-	content, err := loadContentFS()
-	if err != nil {
-		return nil, err
-	}
-	return loadEventFS(content)
 }
 
 func loadContentFS() (fs.FS, error) {
@@ -133,12 +125,13 @@ func loadEventRoutes(content fs.FS, current map[string]eventRoute) (map[string]e
 	}
 	routes := make(map[string]eventRoute, len(entries))
 	for _, entry := range entries {
-		if route, ok := current[entry.Path]; ok && route.menu == entry.Menu {
+		if route, ok := current[entry.Path]; ok && route.menuPath == entry.Menu {
 			routes[entry.Path] = route
 			continue
 		}
+		menuPath := entry.Menu
 		store, err := menu.NewStore(func() (menu.Config, error) {
-			file, err := content.Open(entry.Menu)
+			file, err := content.Open(menuPath)
 			if err != nil {
 				return menu.Config{}, err
 			}
@@ -148,7 +141,7 @@ func loadEventRoutes(content fs.FS, current map[string]eventRoute) (map[string]e
 		if err != nil {
 			return nil, fmt.Errorf("event %s: %w", entry.Path, err)
 		}
-		routes[entry.Path] = eventRoute{menu: entry.Menu, loader: store.Current}
+		routes[entry.Path] = eventRoute{menuPath: menuPath, loader: store.Current}
 	}
 	return routes, nil
 }
@@ -165,7 +158,7 @@ func loadEventEntries(content fs.FS) ([]eventEntry, error) {
 	decoder := yaml.NewDecoder(file)
 	decoder.KnownFields(true)
 	if err := decoder.Decode(&manifest); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("decode events.yaml: %w", err)
 	}
 	var extra any
 	if err := decoder.Decode(&extra); err != io.EOF {
@@ -173,7 +166,7 @@ func loadEventEntries(content fs.FS) ([]eventEntry, error) {
 	}
 	seen := make(map[string]bool, len(manifest.Events))
 	for _, entry := range manifest.Events {
-		if !eventPathPattern.MatchString(entry.Path) || entry.Path == "/healthz" || entry.Path == "/static" {
+		if !eventPathPattern.MatchString(entry.Path) || entry.Path == "/healthz" || entry.Path == "/static" || entry.Path == "/branding" {
 			return nil, fmt.Errorf("invalid or reserved event path %q", entry.Path)
 		}
 		if seen[entry.Path] {

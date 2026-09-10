@@ -133,7 +133,7 @@ func TestCustomBrandingLogo(t *testing.T) {
 	events := map[string]menu.Loader{"/test": func() (menu.Config, error) { return config, nil }}
 	logoData := []byte("\x89PNG\r\n\x1a\ncustom-logo")
 	content := fstest.MapFS{"logos/acme.png": {Data: logoData}}
-	handler, err := New(events, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)), content)
+	handler, err := NewDynamic(func() (map[string]menu.Loader, error) { return events, nil }, os.DirFS("../.."), fstest.MapFS{}, content, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -330,7 +330,7 @@ func TestDynamicEventRouting(t *testing.T) {
 		"/alpha": func() (menu.Config, error) { return menu.Config{}, nil },
 	}
 	templates := fstest.MapFS{"web/templates/index.html": {Data: []byte(`{{.EventPath}}`)}}
-	handler, err := NewDynamic(func() (map[string]menu.Loader, error) { return events, nil }, templates, fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	handler, err := NewDynamic(func() (map[string]menu.Loader, error) { return events, nil }, templates, fstest.MapFS{}, nil, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	if err != nil {
 		t.Fatal(err)
 	}

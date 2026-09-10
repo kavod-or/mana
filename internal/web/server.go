@@ -28,11 +28,11 @@ type server struct {
 
 type EventsLoader func() (map[string]menu.Loader, error)
 
-func New(events map[string]menu.Loader, templates fs.FS, static fs.FS, logger *slog.Logger, contentFiles ...fs.FS) (http.Handler, error) {
-	return NewDynamic(func() (map[string]menu.Loader, error) { return events, nil }, templates, static, logger, contentFiles...)
+func New(events map[string]menu.Loader, templates fs.FS, static fs.FS, logger *slog.Logger) (http.Handler, error) {
+	return NewDynamic(func() (map[string]menu.Loader, error) { return events, nil }, templates, static, nil, logger)
 }
 
-func NewDynamic(events EventsLoader, templates fs.FS, static fs.FS, logger *slog.Logger, contentFiles ...fs.FS) (http.Handler, error) {
+func NewDynamic(events EventsLoader, templates fs.FS, static fs.FS, content fs.FS, logger *slog.Logger) (http.Handler, error) {
 	functions := template.FuncMap{
 		"version": func() string { return version.Current },
 		"tag": func(tags map[string]menu.Localized, id, language string) string {
@@ -57,10 +57,6 @@ func NewDynamic(events EventsLoader, templates fs.FS, static fs.FS, logger *slog
 	}
 	if _, err := page.New("not-found").Parse(notFoundPage); err != nil {
 		return nil, err
-	}
-	var content fs.FS
-	if len(contentFiles) > 0 {
-		content = contentFiles[0]
 	}
 	s := &server{
 		events:  events,
@@ -93,7 +89,10 @@ func (s *server) brandingLogo(writer http.ResponseWriter, request *http.Request)
 		http.NotFound(writer, request)
 		return
 	}
-	config, _ := loader()
+	config, err := loader()
+	if err != nil {
+		s.logger.Warn("menu reload failed; serving last valid version", "event", eventPath, "error", err)
+	}
 	if config.Conference.Logo == "" {
 		http.NotFound(writer, request)
 		return

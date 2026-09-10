@@ -165,7 +165,7 @@ events:
     menu: community-day.yaml
 ```
 
-Each menu uses the same conference, days, food trucks, and refreshments format. Paths are unique lowercase slugs; `/`, `/healthz`, and `/static` are reserved. Generate each venue QR code for its full event URL. `/` displays only a centered German/English instruction to scan the venue QR code, and unknown paths return 404.
+Each menu uses the same conference, days, food trucks, and refreshments format. Paths are unique lowercase slugs; `/`, `/healthz`, `/static`, and `/branding` are reserved. Generate each venue QR code for its full event URL. `/` displays only a centered German/English instruction to scan the venue QR code, and unknown paths return 404.
 
 Event URLs are intentionally public and require no login or access token. Anyone who knows, guesses, or receives an event URL can open its menu directly. The QR code provides a convenient link; scanning it is not required for access. The root page does not list events.
 
