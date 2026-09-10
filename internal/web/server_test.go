@@ -310,7 +310,7 @@ func TestEventRouting(t *testing.T) {
 		handler.ServeHTTP(response, httptest.NewRequest("GET", path, nil))
 		switch path {
 		case "/":
-			if response.Code != 200 || !strings.Contains(response.Body.String(), "Please scan the QR code") || strings.Contains(response.Body.String(), "alpha") {
+			if response.Code != 200 || !strings.Contains(response.Body.String(), "Please scan the QR code") || !strings.Contains(response.Body.String(), "Powered by Mana v") || !strings.Contains(response.Body.String(), "GitHub ↗") || strings.Contains(response.Body.String(), "alpha") {
 				t.Fatal("incorrect landing page")
 			}
 		case "/alpha", "/beta":
@@ -369,7 +369,7 @@ func TestNotFoundPage(t *testing.T) {
 	if response.Header().Get("Content-Type") != "text/html; charset=utf-8" {
 		t.Fatal("expected HTML")
 	}
-	for _, text := range []string{"Hier ist noch nicht gedeckt.", "This page couldn’t be found.", "QR-Code"} {
+	for _, text := range []string{"Hier ist noch nicht gedeckt.", "This page couldn’t be found.", "QR-Code", "Powered by Mana v", "GitHub ↗"} {
 		if !strings.Contains(response.Body.String(), text) {
 			t.Errorf("missing %q", text)
 		}

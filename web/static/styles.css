@@ -462,10 +462,6 @@ footer {
     grid-template-columns: 1fr;
   }
 
-  .focus-card {
-    min-height: 29rem;
-  }
-
   .schedule {
     gap: 2rem;
     padding: 5rem 0;
@@ -733,9 +729,27 @@ footer {
 
 .landing-page {
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   min-height: 100svh;
   place-items: center;
   padding: 1.5rem;
+}
+
+.notice-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  width: min(100%, 32rem);
+  padding-bottom: 0;
+}
+
+.notice-footer .app-version,
+.notice-footer .github-link {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
 }
 
 .notice-card {
@@ -792,6 +806,10 @@ footer {
 }
 
 .app-version:hover { color: var(--green); }
+
+.app-version-label {
+  cursor: default;
+}
 
 .manna-rain {
   position: fixed;
