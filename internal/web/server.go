@@ -19,14 +19,20 @@ import (
 const maxBrandingLogoSize = 5 << 20
 
 type server struct {
-	events  map[string]menu.Loader
+	events  EventsLoader
 	page    *template.Template
 	static  http.Handler
 	content fs.FS
 	logger  *slog.Logger
 }
 
+type EventsLoader func() (map[string]menu.Loader, error)
+
 func New(events map[string]menu.Loader, templates fs.FS, static fs.FS, logger *slog.Logger, contentFiles ...fs.FS) (http.Handler, error) {
+	return NewDynamic(func() (map[string]menu.Loader, error) { return events, nil }, templates, static, logger, contentFiles...)
+}
+
+func NewDynamic(events EventsLoader, templates fs.FS, static fs.FS, logger *slog.Logger, contentFiles ...fs.FS) (http.Handler, error) {
 	functions := template.FuncMap{
 		"version": func() string { return version.Current },
 		"tag": func(tags map[string]menu.Localized, id, language string) string {
@@ -78,7 +84,11 @@ func (s *server) brandingLogo(writer http.ResponseWriter, request *http.Request)
 		return
 	}
 	eventPath := strings.TrimPrefix(request.URL.Path, "/branding")
-	loader, ok := s.events[eventPath]
+	events, err := s.events()
+	if err != nil {
+		s.logger.Warn("event manifest reload failed; serving last valid version", "error", err)
+	}
+	loader, ok := events[eventPath]
 	if !ok {
 		http.NotFound(writer, request)
 		return
@@ -133,7 +143,11 @@ func (s *server) index(writer http.ResponseWriter, request *http.Request) {
 		_ = s.page.ExecuteTemplate(writer, "landing", nil)
 		return
 	}
-	loader, ok := s.events[request.URL.Path]
+	events, reloadErr := s.events()
+	if reloadErr != nil {
+		s.logger.Warn("event manifest reload failed; serving last valid version", "error", reloadErr)
+	}
+	loader, ok := events[request.URL.Path]
 	if !ok {
 		writer.Header().Set("Content-Type", "text/html; charset=utf-8")
 		writer.WriteHeader(http.StatusNotFound)
