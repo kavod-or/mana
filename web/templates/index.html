@@ -59,9 +59,6 @@
         {{range $serviceIndex, $service := $day.Services}}
         <article class="focus-card" data-featured-from="{{.From}}" data-featured-until="{{.Until}}" {{if ne $serviceIndex 0}}hidden{{end}}>
           <div class="focus-topline">
-            <span class="live-dot" aria-hidden="true"></span>
-            <span data-lang-content="de">Im Fokus</span>
-            <span data-lang-content="en" hidden>Featured</span>
             <time>{{.From}}–{{.Until}}</time>
           </div>
           <h2>
@@ -147,7 +144,6 @@
                 <span data-lang-content="en" hidden>Drinks &amp; Snacks</span>
               </h2>
             </div>
-            <span class="availability-mark" aria-hidden="true"></span>
           </div>
 
           {{if $.Permanent.Coffee}}

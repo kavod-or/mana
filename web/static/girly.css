@@ -45,9 +45,7 @@
 .girly-vibes .focus-dish p,
 .girly-vibes .focus-topline,
 .girly-vibes .tags span { color: #ffe8fb; }
-.girly-vibes .tags i,
-.girly-vibes .live-dot,
-.girly-vibes .availability-mark { background: #ffbedf; box-shadow: 0 0 12px #ffbdec; }
+.girly-vibes .tags i { background: #ffbedf; box-shadow: 0 0 12px #ffbdec; }
 .girly-vibes .always-card,
 .girly-vibes .food-truck-card { border: 2px solid #ef91d7; background: #fff0fc; box-shadow: var(--shadow); }
 .girly-vibes .day-switcher button[aria-pressed='true'],

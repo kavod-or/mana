@@ -230,7 +230,6 @@ a:focus-visible {
 .focus-topline {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
   color: #d6e3dd;
   font-size: 0.76rem;
   font-weight: 600;
@@ -242,14 +241,6 @@ a:focus-visible {
   margin-left: auto;
   color: white;
   letter-spacing: 0;
-}
-
-.live-dot {
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 50%;
-  background: #ed9c78;
-  box-shadow: 0 0 0 0.28rem rgb(237 156 120 / 13%);
 }
 
 .focus-card > h2 {
@@ -344,15 +335,6 @@ a:focus-visible {
   font-size: 1.65rem;
   font-weight: 600;
   letter-spacing: -0.035em;
-}
-
-.availability-mark {
-  width: 0.65rem;
-  height: 0.65rem;
-  margin-top: 0.35rem;
-  border-radius: 50%;
-  background: #72a67f;
-  box-shadow: 0 0 0 0.35rem rgb(114 166 127 / 13%);
 }
 
 .always-group {
