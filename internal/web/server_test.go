@@ -325,6 +325,37 @@ func TestEventRouting(t *testing.T) {
 	}
 }
 
+func TestDynamicEventRouting(t *testing.T) {
+	events := map[string]menu.Loader{
+		"/alpha": func() (menu.Config, error) { return menu.Config{}, nil },
+	}
+	templates := fstest.MapFS{"web/templates/index.html": {Data: []byte(`{{.EventPath}}`)}}
+	handler, err := NewDynamic(func() (map[string]menu.Loader, error) { return events, nil }, templates, fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/alpha", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("initial event status = %d", response.Code)
+	}
+
+	events = map[string]menu.Loader{
+		"/beta": func() (menu.Config, error) { return menu.Config{}, nil },
+	}
+	response = httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/beta", nil))
+	if response.Code != http.StatusOK || response.Body.String() != "/beta" {
+		t.Fatalf("reloaded event response = %d %q", response.Code, response.Body.String())
+	}
+	response = httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/alpha", nil))
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("removed event status = %d", response.Code)
+	}
+}
+
 func TestNotFoundPage(t *testing.T) {
 	handler, err := New(nil, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	if err != nil {

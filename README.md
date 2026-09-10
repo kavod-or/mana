@@ -169,7 +169,7 @@ Each menu uses the same conference, days, food trucks, and refreshments format. 
 
 Event URLs are intentionally public and require no login or access token. Anyone who knows, guesses, or receives an event URL can open its menu directly. The QR code provides a convenient link; scanning it is not required for access. The root page does not list events.
 
-`make dev` and Docker Compose use `CONTENT_DIR` to read external files. Menu edits reload independently, retaining each event's last valid menu on invalid edits. Restart the app after changing `events.yaml` to add, remove, or rename event paths. `MENU_PATH` has been replaced by `CONTENT_DIR`.
+`make dev` and Docker Compose use `CONTENT_DIR` to read external files. Menu files and `events.yaml` are checked for updates at most twice per second. Events can be added, removed, renamed, or pointed to a different menu without restarting the app. Invalid edits keep the last valid menus and route set online. `MENU_PATH` has been replaced by `CONTENT_DIR`.
 
 ## Payment information
 

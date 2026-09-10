@@ -79,3 +79,61 @@ func TestContentRootRejectsSymlinkEscape(t *testing.T) {
 		t.Fatal("event loader accepted a menu symlink outside the content root")
 	}
 }
+
+func TestEventRegistryReloadsManifestAndKeepsLastValidVersion(t *testing.T) {
+	content := fstest.MapFS{
+		"events.yaml": {Data: []byte("events:\n  - path: /alpha\n    menu: alpha.yaml\n")},
+		"alpha.yaml":  {Data: []byte(testMenu("Alpha"))},
+		"beta.yaml":   {Data: []byte(testMenu("Beta"))},
+	}
+	registry, err := newEventRegistryWithInterval(content, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	content["events.yaml"] = &fstest.MapFile{Data: []byte("events:\n  - path: /beta\n    menu: beta.yaml\n")}
+	events, err := registry.Current()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, alphaExists := events["/alpha"]; alphaExists || events["/beta"] == nil {
+		t.Fatalf("manifest change was not applied: %#v", events)
+	}
+	beta, err := events["/beta"]()
+	if err != nil || beta.Conference.Name.EN != "Beta" {
+		t.Fatalf("new event menu = %#v, %v", beta, err)
+	}
+
+	content["events.yaml"] = &fstest.MapFile{Data: []byte("events: [")}
+	events, err = registry.Current()
+	if err == nil {
+		t.Fatal("invalid manifest did not report an error")
+	}
+	if events["/beta"] == nil {
+		t.Fatal("invalid manifest replaced the last valid routes")
+	}
+
+	content["events.yaml"] = &fstest.MapFile{Data: []byte("events: []\n")}
+	events, err = registry.Current()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(events) != 0 {
+		t.Fatalf("removed event remained available: %#v", events)
+	}
+}
+
+func testMenu(name string) string {
+	return "conference:\n" +
+		"  name: {de: " + name + ", en: " + name + "}\n" +
+		"  location: {de: Foyer, en: Foyer}\n" +
+		"days:\n" +
+		"  - date: '2026-10-12'\n" +
+		"    services:\n" +
+		"      - id: lunch\n" +
+		"        title: {de: Mittagessen, en: Lunch}\n" +
+		"        subtitle: {de: Frisch, en: Fresh}\n" +
+		"        from: '12:00'\n" +
+		"        until: '13:00'\n" +
+		"        items: []\n"
+}

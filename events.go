@@ -7,6 +7,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
+	"time"
 
 	"gopkg.in/yaml.v3"
 	"mana/internal/menu"
@@ -15,6 +17,20 @@ import (
 type eventEntry struct {
 	Path string `yaml:"path"`
 	Menu string `yaml:"menu"`
+}
+
+type eventRoute struct {
+	menu   string
+	loader menu.Loader
+}
+
+type eventRegistry struct {
+	mu              sync.Mutex
+	reloading       bool
+	content         fs.FS
+	current         map[string]eventRoute
+	reloadInterval  time.Duration
+	nextReloadAfter time.Time
 }
 
 var eventPathPattern = regexp.MustCompile(`^/[a-z0-9]+(?:-[a-z0-9]+)*$`)
@@ -56,6 +72,88 @@ func loadContentFS() (fs.FS, error) {
 }
 
 func loadEventFS(content fs.FS) (map[string]menu.Loader, error) {
+	routes, err := loadEventRoutes(content, nil)
+	if err != nil {
+		return nil, err
+	}
+	return eventLoaders(routes), nil
+}
+
+func newEventRegistry(content fs.FS) (*eventRegistry, error) {
+	return newEventRegistryWithInterval(content, 500*time.Millisecond)
+}
+
+func newEventRegistryWithInterval(content fs.FS, reloadInterval time.Duration) (*eventRegistry, error) {
+	routes, err := loadEventRoutes(content, nil)
+	if err != nil {
+		return nil, err
+	}
+	return &eventRegistry{
+		content:         content,
+		current:         routes,
+		reloadInterval:  reloadInterval,
+		nextReloadAfter: time.Now().Add(reloadInterval),
+	}, nil
+}
+
+func (registry *eventRegistry) Current() (map[string]menu.Loader, error) {
+	registry.mu.Lock()
+	if registry.reloading || time.Now().Before(registry.nextReloadAfter) {
+		events := eventLoaders(registry.current)
+		registry.mu.Unlock()
+		return events, nil
+	}
+	registry.reloading = true
+	current := registry.current
+	registry.mu.Unlock()
+
+	routes, err := loadEventRoutes(registry.content, current)
+	registry.mu.Lock()
+	defer registry.mu.Unlock()
+	registry.reloading = false
+	registry.nextReloadAfter = time.Now().Add(registry.reloadInterval)
+	if err == nil {
+		registry.current = routes
+	}
+	return eventLoaders(registry.current), err
+}
+
+func eventLoaders(routes map[string]eventRoute) map[string]menu.Loader {
+	events := make(map[string]menu.Loader, len(routes))
+	for eventPath, route := range routes {
+		events[eventPath] = route.loader
+	}
+	return events
+}
+
+func loadEventRoutes(content fs.FS, current map[string]eventRoute) (map[string]eventRoute, error) {
+	entries, err := loadEventEntries(content)
+	if err != nil {
+		return nil, err
+	}
+	routes := make(map[string]eventRoute, len(entries))
+	for _, entry := range entries {
+		if route, ok := current[entry.Path]; ok && route.menu == entry.Menu {
+			routes[entry.Path] = route
+			continue
+		}
+		store, err := menu.NewStore(func() (menu.Config, error) {
+			file, err := content.Open(entry.Menu)
+			if err != nil {
+				return menu.Config{}, err
+			}
+			defer file.Close()
+			return menu.Decode(file)
+		})
+		if err != nil {
+			return nil, fmt.Errorf("event %s: %w", entry.Path, err)
+		}
+		routes[entry.Path] = eventRoute{menu: entry.Menu, loader: store.Current}
+	}
+	return routes, nil
+}
+
+func loadEventEntries(content fs.FS) ([]eventEntry, error) {
 	file, err := content.Open("events.yaml")
 	if err != nil {
 		return nil, err
@@ -73,29 +171,18 @@ func loadEventFS(content fs.FS) (map[string]menu.Loader, error) {
 	if err := decoder.Decode(&extra); err != io.EOF {
 		return nil, fmt.Errorf("events.yaml must contain exactly one YAML document")
 	}
-	events := make(map[string]menu.Loader)
+	seen := make(map[string]bool, len(manifest.Events))
 	for _, entry := range manifest.Events {
 		if !eventPathPattern.MatchString(entry.Path) || entry.Path == "/healthz" || entry.Path == "/static" {
 			return nil, fmt.Errorf("invalid or reserved event path %q", entry.Path)
 		}
-		if _, exists := events[entry.Path]; exists {
+		if seen[entry.Path] {
 			return nil, fmt.Errorf("duplicate event path %q", entry.Path)
 		}
+		seen[entry.Path] = true
 		if !fs.ValidPath(entry.Menu) || strings.Contains(entry.Menu, `\`) {
 			return nil, fmt.Errorf("invalid menu path %q", entry.Menu)
 		}
-		store, err := menu.NewStore(func() (menu.Config, error) {
-			file, err := content.Open(entry.Menu)
-			if err != nil {
-				return menu.Config{}, err
-			}
-			defer file.Close()
-			return menu.Decode(file)
-		})
-		if err != nil {
-			return nil, fmt.Errorf("event %s: %w", entry.Path, err)
-		}
-		events[entry.Path] = store.Current
 	}
-	return events, nil
+	return manifest.Events, nil
 }
