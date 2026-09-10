@@ -55,7 +55,7 @@ func TestConferenceLogo(t *testing.T) {
 			t.Fatalf("logo = %q, want %q", config.Conference.Logo, filename)
 		}
 	}
-	for _, filename := range []string{"../brand.png", "/brand.png", "brand.svg", "brand.txt"} {
+	for _, filename := range []string{"../brand.png", "/brand.png", `..\brand.png`, "brand.svg", "brand.txt"} {
 		source := strings.Replace(validMenu, "conference:", "conference:\n  logo: "+filename, 1)
 		if _, err := Decode(strings.NewReader(source)); err == nil {
 			t.Fatalf("accepted unsafe logo path %q", filename)

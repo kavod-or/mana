@@ -50,7 +50,7 @@ conference:
   # Keep the existing location and timezone fields.
 ```
 
-The image is served only through that event's branding URL. Omit `logo` to use the built-in Mana logo. With `CONTENT_DIR`, replacing the image or changing the setting takes effect on reload without rebuilding the application.
+The image is served only through that event's branding URL. Paths must remain inside `content`; absolute paths, traversal, escaping symlinks, non-image data, and files larger than 5 MB are rejected. Omit `logo` to use the built-in Mana logo. With `CONTENT_DIR`, replacing the image or changing the setting takes effect on reload without rebuilding the application.
 
 ## Local development
 

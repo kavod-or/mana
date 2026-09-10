@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 	"mana/internal/menu"
@@ -18,6 +19,22 @@ type eventEntry struct {
 
 var eventPathPattern = regexp.MustCompile(`^/[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
+type rootedFS struct {
+	root *os.Root
+}
+
+func (root *rootedFS) Open(name string) (fs.File, error) {
+	return root.root.Open(name)
+}
+
+func (root *rootedFS) Stat(name string) (fs.FileInfo, error) {
+	return root.root.Stat(name)
+}
+
+func (root *rootedFS) Close() error {
+	return root.root.Close()
+}
+
 func loadEvents() (map[string]menu.Loader, error) {
 	content, err := loadContentFS()
 	if err != nil {
@@ -28,7 +45,12 @@ func loadEvents() (map[string]menu.Loader, error) {
 
 func loadContentFS() (fs.FS, error) {
 	if dir := os.Getenv("CONTENT_DIR"); dir != "" {
-		return os.DirFS(dir), nil
+		// os.Root prevents relative paths and symlinks from escaping CONTENT_DIR.
+		root, err := os.OpenRoot(dir)
+		if err != nil {
+			return nil, err
+		}
+		return &rootedFS{root: root}, nil
 	}
 	return fs.Sub(assets, "content")
 }
@@ -59,7 +81,7 @@ func loadEventFS(content fs.FS) (map[string]menu.Loader, error) {
 		if _, exists := events[entry.Path]; exists {
 			return nil, fmt.Errorf("duplicate event path %q", entry.Path)
 		}
-		if !fs.ValidPath(entry.Menu) {
+		if !fs.ValidPath(entry.Menu) || strings.Contains(entry.Menu, `\`) {
 			return nil, fmt.Errorf("invalid menu path %q", entry.Menu)
 		}
 		store, err := menu.NewStore(func() (menu.Config, error) {

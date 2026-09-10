@@ -1,6 +1,7 @@
 package web
 
 import (
+	"bytes"
 	"compress/gzip"
 	"html"
 	"io"
@@ -130,7 +131,8 @@ func TestCustomBrandingLogo(t *testing.T) {
 		Name: menu.Localized{DE: "Acme Konferenz", EN: "Acme Conference"},
 	}}
 	events := map[string]menu.Loader{"/test": func() (menu.Config, error) { return config, nil }}
-	content := fstest.MapFS{"logos/acme.png": {Data: []byte("custom-logo")}}
+	logoData := []byte("\x89PNG\r\n\x1a\ncustom-logo")
+	content := fstest.MapFS{"logos/acme.png": {Data: logoData}}
 	handler, err := New(events, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)), content)
 	if err != nil {
 		t.Fatal(err)
@@ -144,17 +146,28 @@ func TestCustomBrandingLogo(t *testing.T) {
 
 	logo := httptest.NewRecorder()
 	handler.ServeHTTP(logo, httptest.NewRequest(http.MethodGet, "/branding/test", nil))
-	if logo.Code != http.StatusOK || logo.Body.String() != "custom-logo" {
+	if logo.Code != http.StatusOK || !bytes.Equal(logo.Body.Bytes(), logoData) {
 		t.Fatalf("custom logo response = %d %q", logo.Code, logo.Body.String())
 	}
 	if got := logo.Header().Get("Cache-Control"); got != "no-cache" {
 		t.Fatalf("Cache-Control = %q, want no-cache", got)
+	}
+	if got := logo.Header().Get("Content-Type"); got != "image/png" {
+		t.Fatalf("Content-Type = %q, want image/png", got)
 	}
 
 	missing := httptest.NewRecorder()
 	handler.ServeHTTP(missing, httptest.NewRequest(http.MethodGet, "/branding/missing", nil))
 	if missing.Code != http.StatusNotFound {
 		t.Fatalf("missing logo status = %d, want 404", missing.Code)
+	}
+
+	config.Conference.Logo = "logos/not-an-image.png"
+	content["logos/not-an-image.png"] = &fstest.MapFile{Data: []byte("private server data")}
+	nonImage := httptest.NewRecorder()
+	handler.ServeHTTP(nonImage, httptest.NewRequest(http.MethodGet, "/branding/test", nil))
+	if nonImage.Code != http.StatusNotFound || strings.Contains(nonImage.Body.String(), "private server data") {
+		t.Fatal("non-image content was exposed through the branding endpoint")
 	}
 }
 

@@ -228,7 +228,7 @@ func validateLogo(filename string) error {
 	if filename == "" {
 		return nil
 	}
-	if !fs.ValidPath(filename) {
+	if !fs.ValidPath(filename) || strings.Contains(filename, `\`) {
 		return fmt.Errorf("conference.logo must be a relative file path")
 	}
 	switch strings.ToLower(path.Ext(filename)) {

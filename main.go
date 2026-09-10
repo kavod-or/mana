@@ -27,6 +27,9 @@ func main() {
 		logger.Error("could not load content", "error", err)
 		os.Exit(1)
 	}
+	if closer, ok := content.(interface{ Close() error }); ok {
+		defer closer.Close()
+	}
 
 	events, err := loadEventFS(content)
 	if err != nil {

@@ -16,6 +16,8 @@ import (
 	"mana/internal/version"
 )
 
+const maxBrandingLogoSize = 5 << 20
+
 type server struct {
 	events  map[string]menu.Loader
 	page    *template.Template
@@ -86,8 +88,30 @@ func (s *server) brandingLogo(writer http.ResponseWriter, request *http.Request)
 		http.NotFound(writer, request)
 		return
 	}
+	info, err := fs.Stat(s.content, config.Conference.Logo)
+	if err != nil || !info.Mode().IsRegular() || info.Size() > maxBrandingLogoSize {
+		http.NotFound(writer, request)
+		return
+	}
+	file, err := s.content.Open(config.Conference.Logo)
+	if err != nil {
+		http.NotFound(writer, request)
+		return
+	}
+	defer file.Close()
+	logo, err := io.ReadAll(io.LimitReader(file, maxBrandingLogoSize+1))
+	if err != nil || len(logo) > maxBrandingLogoSize {
+		http.NotFound(writer, request)
+		return
+	}
+	contentType := http.DetectContentType(logo)
+	if !strings.HasPrefix(contentType, "image/") {
+		http.NotFound(writer, request)
+		return
+	}
 	writer.Header().Set("Cache-Control", "no-cache")
-	http.ServeFileFS(writer, request, s.content, config.Conference.Logo)
+	writer.Header().Set("Content-Type", contentType)
+	http.ServeContent(writer, request, "branding-logo", info.ModTime(), bytes.NewReader(logo))
 }
 
 // Only shared presentation assets are public. Never expose a directory listing,
