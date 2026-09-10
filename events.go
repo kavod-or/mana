@@ -19,17 +19,18 @@ type eventEntry struct {
 var eventPathPattern = regexp.MustCompile(`^/[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
 func loadEvents() (map[string]menu.Loader, error) {
-	var content fs.FS
-	if dir := os.Getenv("CONTENT_DIR"); dir != "" {
-		content = os.DirFS(dir)
-	} else {
-		var err error
-		content, err = fs.Sub(assets, "content")
-		if err != nil {
-			return nil, err
-		}
+	content, err := loadContentFS()
+	if err != nil {
+		return nil, err
 	}
 	return loadEventFS(content)
+}
+
+func loadContentFS() (fs.FS, error) {
+	if dir := os.Getenv("CONTENT_DIR"); dir != "" {
+		return os.DirFS(dir), nil
+	}
+	return fs.Sub(assets, "content")
 }
 
 func loadEventFS(content fs.FS) (map[string]menu.Loader, error) {

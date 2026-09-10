@@ -73,6 +73,7 @@ a:focus-visible {
   display: flex;
   flex: 0 0 auto;
   width: clamp(10rem, 20vw, 14rem);
+  height: clamp(3rem, 8vw, 4.6rem);
   align-items: center;
   text-decoration: none;
 }
@@ -80,8 +81,9 @@ a:focus-visible {
 .brand-logo {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: contain;
+  object-position: left center;
 }
 
 .header-tools {
@@ -219,7 +221,6 @@ a:focus-visible {
 
 .focus-card {
   display: flex;
-  min-height: 31rem;
   padding: clamp(1.6rem, 4vw, 3rem);
   color: white;
   background: var(--green);
@@ -253,7 +254,7 @@ a:focus-visible {
 
 .focus-subtitle {
   max-width: 30rem;
-  margin: 0.9rem 0 3rem;
+  margin: 0.9rem 0 1.25rem;
   color: #bdd0c6;
   font-size: 0.95rem;
 }
@@ -261,7 +262,6 @@ a:focus-visible {
 .focus-dishes {
   display: grid;
   gap: 1.3rem;
-  margin-top: auto;
 }
 
 .focus-dish {
@@ -505,7 +505,6 @@ footer {
   }
 
   .focus-card {
-    min-height: 31rem;
     padding: 1.5rem;
   }
 
@@ -553,11 +552,6 @@ footer {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-.focus-card > .price {
-  margin-top: 1rem;
-  font-size: 1.2rem;
 }
 
 .always-group li {
@@ -733,8 +727,7 @@ footer {
   flex-wrap: wrap;
 }
 
-.focus-card > .sold-out,
-.focus-card > .size-prices {
+.focus-card > .sold-out {
   align-self: flex-start;
 }
 

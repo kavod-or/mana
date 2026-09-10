@@ -39,6 +39,19 @@ The directory mount is read-only (`:ro`) from the container's perspective. This 
 
 Without `CONTENT_DIR`, the application uses the event manifest and menus embedded at build time.
 
+## Event branding
+
+To replace the Mana header logo for an event, place a PNG, JPEG, WebP, GIF, or AVIF image in the `content` directory and set its relative path under `conference.logo` in that event's menu:
+
+```yaml
+conference:
+  logo: example-conference-logo.png
+  name: {de: Beispiel Konferenz, en: Example Conference}
+  # Keep the existing location and timezone fields.
+```
+
+The image is served only through that event's branding URL. Omit `logo` to use the built-in Mana logo. With `CONTENT_DIR`, replacing the image or changing the setting takes effect on reload without rebuilding the application.
+
 ## Local development
 
 Go 1.24 or newer is required.
@@ -66,26 +79,26 @@ Run `make test` to include the JavaScript tests (requires Node.js with `node --t
 
 ## Optional prices
 
-Add `price` to a service (a whole meal), an individual meal item, or a permanent coffee/drink/snack in the event's menu file:
+Add `price` to an individual meal item or a permanent coffee/drink/snack in the event's menu file. Services such as breakfast, lunch, and dinner provide the title and short description; their items carry the prices:
 
 ```yaml
 # Within days[].services[]:
 - id: lunch
-  price: 12.50
-  # Keep the existing title, subtitle, from and until fields.
+  title: {de: Mittagessen, en: Lunch}
+  subtitle: {de: Frisch zubereitet, en: Freshly prepared}
   items:
     - id: vegetable_curry
       price: 8.50
       name: {de: Gemüse-Curry, en: Vegetable curry}
 ```
 
-Prices are euro amounts with a decimal point and at most two decimal places. Negative amounts and invalid values are rejected. Omit `price` or set it to `null` to hide it; `price: 0` explicitly displays zero. Meal and item prices are independent and are not added together or inherited.
+Prices are euro amounts with a decimal point and at most two decimal places. Negative amounts and invalid values are rejected. Omit `price` or set it to `null` to hide it; `price: 0` explicitly displays zero.
 
 The language switch displays German (`12,50 €`) or English (`€12.50`) formatting in the featured meal, full schedule, drinks, and snacks. External menu prices reload just like other menu content.
 
 Coffee is configured separately under `permanent.coffee`, other drinks under `permanent.drinks`, and snacks under `permanent.snacks`. Coffee items support the same optional prices and translations. The Coffee section is hidden when its list is empty.
 
-For optional size prices, replace `price` with either or both size fields on a meal or item:
+For optional size prices, replace an item's `price` with either or both size fields:
 
 ```yaml
 - id: cappuccino
@@ -94,7 +107,7 @@ For optional size prices, replace `price` with either or both size fields on a m
   price_large: 4.20
 ```
 
-Size labels are Normal/Groß in German and Regular/Large in English. Missing or null sizes are hidden, and zero is displayed. Do not combine a single `price` with size prices on the same meal or item.
+Size labels are Normal/Groß in German and Regular/Large in English. Missing or null sizes are hidden, and zero is displayed. Do not combine a single `price` with size prices on the same item.
 
 ## Food trucks
 

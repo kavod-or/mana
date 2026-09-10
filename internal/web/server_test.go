@@ -124,14 +124,48 @@ func TestStaticAssetsUseLongLivedCache(t *testing.T) {
 	}
 }
 
+func TestCustomBrandingLogo(t *testing.T) {
+	config := menu.Config{Conference: menu.Conference{
+		Logo: "logos/acme.png",
+		Name: menu.Localized{DE: "Acme Konferenz", EN: "Acme Conference"},
+	}}
+	events := map[string]menu.Loader{"/test": func() (menu.Config, error) { return config, nil }}
+	content := fstest.MapFS{"logos/acme.png": {Data: []byte("custom-logo")}}
+	handler, err := New(events, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)), content)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	page := httptest.NewRecorder()
+	handler.ServeHTTP(page, httptest.NewRequest(http.MethodGet, "/test", nil))
+	if !strings.Contains(page.Body.String(), `src="/branding/test"`) || !strings.Contains(page.Body.String(), `alt="Acme Konferenz"`) {
+		t.Fatalf("custom logo missing from page: %s", page.Body.String())
+	}
+
+	logo := httptest.NewRecorder()
+	handler.ServeHTTP(logo, httptest.NewRequest(http.MethodGet, "/branding/test", nil))
+	if logo.Code != http.StatusOK || logo.Body.String() != "custom-logo" {
+		t.Fatalf("custom logo response = %d %q", logo.Code, logo.Body.String())
+	}
+	if got := logo.Header().Get("Cache-Control"); got != "no-cache" {
+		t.Fatalf("Cache-Control = %q, want no-cache", got)
+	}
+
+	missing := httptest.NewRecorder()
+	handler.ServeHTTP(missing, httptest.NewRequest(http.MethodGet, "/branding/missing", nil))
+	if missing.Code != http.StatusNotFound {
+		t.Fatalf("missing logo status = %d, want 404", missing.Code)
+	}
+}
+
 var _ fs.FS = fstest.MapFS{}
 
 func TestPricesInRealTemplate(t *testing.T) {
 	for _, configured := range []bool{false, true} {
 		config := menu.Config{Days: []menu.Day{{Services: []menu.Service{{Items: []menu.Item{{}}}}}}, Permanent: menu.Permanent{Drinks: []menu.Item{{}}, Snacks: []menu.Item{{}}}}
 		if configured {
-			meal, item, zero := menu.Price(1250), menu.Price(450), menu.Price(0)
-			config.Days[0].Services[0].Price = &meal
+			legacyMeal, item, zero := menu.Price(1250), menu.Price(450), menu.Price(0)
+			config.Days[0].Services[0].Price = &legacyMeal
 			config.Days[0].Services[0].Items[0].Price = &item
 			config.Permanent.Drinks[0].Price = &zero
 			config.Permanent.Snacks[0].Price = &item
@@ -149,17 +183,20 @@ func TestPricesInRealTemplate(t *testing.T) {
 			}
 			continue
 		}
-		for text, count := range map[string]int{"12,50\u00a0€": 2, "€12.50": 2, "4,50\u00a0€": 3, "€4.50": 3, "0,00\u00a0€": 1, "€0.00": 1} {
+		for text, count := range map[string]int{"4,50\u00a0€": 3, "€4.50": 3, "0,00\u00a0€": 1, "€0.00": 1} {
 			if got := strings.Count(body, text); got != count {
 				t.Errorf("%q appeared %d times, want %d", text, got, count)
 			}
+		}
+		if strings.Contains(body, "12,50\u00a0€") || strings.Contains(body, "€12.50") {
+			t.Error("legacy service price rendered")
 		}
 	}
 }
 
 func TestSizePricesRender(t *testing.T) {
 	normal, large := menu.Price(0), menu.Price(420)
-	config := menu.Config{Days: []menu.Day{{Services: []menu.Service{{PriceNormal: &normal, PriceLarge: &large}}}}, Permanent: menu.Permanent{Coffee: []menu.Item{{PriceNormal: &normal}, {PriceLarge: &large}}}}
+	config := menu.Config{Days: []menu.Day{{Services: []menu.Service{{Items: []menu.Item{{PriceNormal: &normal, PriceLarge: &large}}}}}}, Permanent: menu.Permanent{Coffee: []menu.Item{{PriceNormal: &normal}, {PriceLarge: &large}}}}
 	handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	if err != nil {
 		t.Fatal(err)
@@ -208,7 +245,7 @@ func TestFoodTrucksInExampleMenu(t *testing.T) {
 
 func TestSoldOutRendering(t *testing.T) {
 	price := menu.Price(250)
-	config := menu.Config{Days: []menu.Day{{Services: []menu.Service{{SoldOut: true, Price: &price, Items: []menu.Item{{SoldOut: true, Price: &price}}}}}}, Permanent: menu.Permanent{Coffee: []menu.Item{{SoldOut: true, PriceNormal: &price}}, Drinks: []menu.Item{{SoldOut: true}}, Snacks: []menu.Item{{SoldOut: true}}}}
+	config := menu.Config{Days: []menu.Day{{Services: []menu.Service{{SoldOut: true, Items: []menu.Item{{SoldOut: true, Price: &price}}}}}}, Permanent: menu.Permanent{Coffee: []menu.Item{{SoldOut: true, PriceNormal: &price}}, Drinks: []menu.Item{{SoldOut: true}}, Snacks: []menu.Item{{SoldOut: true}}}}
 	handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 	if err != nil {
 		t.Fatal(err)

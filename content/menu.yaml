@@ -1,7 +1,9 @@
-# Optional prices in EUR: add price: 12.50 to a service or any item.
+# Optional prices in EUR: add price: 12.50 to an item.
 # Omit price (or use null) to hide it; price: 0 displays zero.
 # Add sold_out: true to any meal or item to show Ausverkauft / Sold out.
 conference:
+  # Set this to an image in the content directory, for example: example-conference-logo.png
+  logo: ""
   # Optional payment notice (requires both languages):
   # payment: {de: Nur Barzahlung, en: Cash only}
   # All serving times below use this timezone.
@@ -127,7 +129,6 @@ days:
         until: "20:30"
     services:
       - id: lunch
-        price: 12.50
         title:
           de: Mittagessen
           en: Lunch
@@ -157,7 +158,6 @@ days:
               en: Rosemary potatoes · green beans · lemon jus
             tags: [kosher]
       - id: coffee_break
-        price: 5.00
         title:
           de: Kaffeepause
           en: Coffee break
@@ -177,7 +177,6 @@ days:
               en: Cinnamon apples · crisp butter crumble · vanilla cream
             tags: [vegetarian]
       - id: dinner
-        price: 18.00
         title:
           de: Abendessen
           en: Dinner
@@ -214,7 +213,6 @@ days:
         until: "15:00"
     services:
       - id: breakfast
-        price: 9.50
         title:
           de: Frühstück
           en: Breakfast
@@ -243,7 +241,6 @@ days:
               en: Cucumber · radishes · garden cress · sesame bagel
             tags: [vegetarian]
       - id: lunch
-        price: 12.50
         title:
           de: Mittagessen
           en: Lunch
@@ -263,7 +260,6 @@ days:
               en: Courgette · peppers · mint · lemon tahini dressing
             tags: [vegetarian]
       - id: coffee_break
-        price: 5.00
         title:
           de: Kaffeepause
           en: Coffee break
@@ -286,7 +282,6 @@ days:
   - date: "2026-09-10"
     services:
       - id: lunch
-        price: 12.50
         title:
           de: Mittagessen
           en: Lunch
@@ -307,7 +302,6 @@ days:
             tags: [vegetarian, gluten_free]
       - id: farewell
         sold_out: true
-        price: 3.00
         title:
           de: Farewell Snack
           en: Farewell snack

@@ -3,6 +3,8 @@ package menu
 import (
 	"fmt"
 	"io"
+	"io/fs"
+	"path"
 	"strings"
 	"time"
 	_ "time/tzdata"
@@ -25,6 +27,7 @@ type Config struct {
 type Conference struct {
 	Payment  Localized `yaml:"payment"`
 	TimeZone string    `yaml:"timezone"`
+	Logo     string    `yaml:"logo"`
 	Name     Localized `yaml:"name"`
 	Location Localized `yaml:"location"`
 }
@@ -54,9 +57,9 @@ type FoodTruck struct {
 
 type Service struct {
 	SoldOut     bool      `yaml:"sold_out"`
-	PriceNormal *Price    `yaml:"price_normal"`
-	PriceLarge  *Price    `yaml:"price_large"`
-	Price       *Price    `yaml:"price"`
+	PriceNormal *Price    `yaml:"price_normal"` // Accepted for compatibility; service prices are not displayed.
+	PriceLarge  *Price    `yaml:"price_large"`  // Accepted for compatibility; service prices are not displayed.
+	Price       *Price    `yaml:"price"`        // Accepted for compatibility; service prices are not displayed.
 	ID          string    `yaml:"id"`
 	Title       Localized `yaml:"title"`
 	Subtitle    Localized `yaml:"subtitle"`
@@ -110,6 +113,9 @@ func (config Config) Validate() error {
 		return err
 	}
 	if err := validatePayment("conference.payment", config.Conference.Payment); err != nil {
+		return err
+	}
+	if err := validateLogo(config.Conference.Logo); err != nil {
 		return err
 	}
 	for id, label := range config.Tags {
@@ -216,6 +222,21 @@ func (config Config) Validate() error {
 		}
 	}
 	return nil
+}
+
+func validateLogo(filename string) error {
+	if filename == "" {
+		return nil
+	}
+	if !fs.ValidPath(filename) {
+		return fmt.Errorf("conference.logo must be a relative file path")
+	}
+	switch strings.ToLower(path.Ext(filename)) {
+	case ".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif":
+		return nil
+	default:
+		return fmt.Errorf("conference.logo must be a PNG, JPEG, WebP, GIF, or AVIF image")
+	}
 }
 
 func (config Config) validateItem(path string, item Item) error {

@@ -44,6 +44,25 @@ func TestDecodeRejectsUnknownFields(t *testing.T) {
 	}
 }
 
+func TestConferenceLogo(t *testing.T) {
+	for _, filename := range []string{"brand.png", "logos/brand.JPEG", "brand.webp", "brand.gif", "brand.avif"} {
+		source := strings.Replace(validMenu, "conference:", "conference:\n  logo: "+filename, 1)
+		config, err := Decode(strings.NewReader(source))
+		if err != nil {
+			t.Fatalf("accepted logo %q returned an error: %v", filename, err)
+		}
+		if config.Conference.Logo != filename {
+			t.Fatalf("logo = %q, want %q", config.Conference.Logo, filename)
+		}
+	}
+	for _, filename := range []string{"../brand.png", "/brand.png", "brand.svg", "brand.txt"} {
+		source := strings.Replace(validMenu, "conference:", "conference:\n  logo: "+filename, 1)
+		if _, err := Decode(strings.NewReader(source)); err == nil {
+			t.Fatalf("accepted unsafe logo path %q", filename)
+		}
+	}
+}
+
 func TestValidateRejectsIncompleteTranslation(t *testing.T) {
 	config, err := Decode(strings.NewReader(strings.Replace(validMenu, "{de: Konferenz, en: Conference}", "{de: Konferenz}", 1)))
 	if err == nil {
@@ -91,13 +110,13 @@ func TestStoreKeepsLastValidMenu(t *testing.T) {
 func TestOptionalPrices(t *testing.T) {
 	for _, value := range []string{"12.50", "0", "1234.5", "null"} {
 		t.Run(value, func(t *testing.T) {
-			source := strings.Replace(validMenu, "- id: lunch", "- id: lunch\n        price: "+value, 1)
+			source := strings.Replace(validMenu, "        items: []", "        items:\n          - id: soup\n            name: {de: Suppe, en: Soup}\n            price: "+value, 1)
 			source = strings.Replace(source, "- id: water", "- id: water\n      price: "+value, 1)
 			config, err := Decode(strings.NewReader(source))
 			if err != nil {
 				t.Fatal(err)
 			}
-			meal, item := config.Days[0].Services[0].Price, config.Permanent.Drinks[0].Price
+			meal, item := config.Days[0].Services[0].Items[0].Price, config.Permanent.Drinks[0].Price
 			if value == "null" {
 				if meal != nil || item != nil {
 					t.Fatal("null prices must be absent")
@@ -115,7 +134,7 @@ func TestOptionalPrices(t *testing.T) {
 	}
 	for _, value := range []string{"-1", "1.234", "NaN", ".inf", "true", "12,50", "[12]", "{amount: 12}", "999999999999999999999"} {
 		t.Run("invalid_"+value, func(t *testing.T) {
-			source := strings.Replace(validMenu, "- id: lunch", "- id: lunch\n        price: "+value, 1)
+			source := strings.Replace(validMenu, "- id: water", "- id: water\n      price: "+value, 1)
 			if _, err := Decode(strings.NewReader(source)); err == nil {
 				t.Fatalf("accepted %s", value)
 			}

@@ -17,13 +17,14 @@ import (
 )
 
 type server struct {
-	events map[string]menu.Loader
-	page   *template.Template
-	static http.Handler
-	logger *slog.Logger
+	events  map[string]menu.Loader
+	page    *template.Template
+	static  http.Handler
+	content fs.FS
+	logger  *slog.Logger
 }
 
-func New(events map[string]menu.Loader, templates fs.FS, static fs.FS, logger *slog.Logger) (http.Handler, error) {
+func New(events map[string]menu.Loader, templates fs.FS, static fs.FS, logger *slog.Logger, contentFiles ...fs.FS) (http.Handler, error) {
 	functions := template.FuncMap{
 		"version": func() string { return version.Current },
 		"tag": func(tags map[string]menu.Localized, id, language string) string {
@@ -49,18 +50,44 @@ func New(events map[string]menu.Loader, templates fs.FS, static fs.FS, logger *s
 	if _, err := page.New("not-found").Parse(notFoundPage); err != nil {
 		return nil, err
 	}
+	var content fs.FS
+	if len(contentFiles) > 0 {
+		content = contentFiles[0]
+	}
 	s := &server{
-		events: events,
-		page:   page,
-		static: http.StripPrefix("/static/", http.FileServer(http.FS(static))),
-		logger: logger,
+		events:  events,
+		page:    page,
+		static:  http.StripPrefix("/static/", http.FileServer(http.FS(static))),
+		content: content,
+		logger:  logger,
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", s.index)
 	mux.HandleFunc("GET /healthz", s.health)
 	mux.HandleFunc("GET /static/", s.asset)
+	mux.HandleFunc("GET /branding/", s.brandingLogo)
 	return securityHeaders(gzipResponses(accessLog(mux, logger))), nil
+}
+
+func (s *server) brandingLogo(writer http.ResponseWriter, request *http.Request) {
+	if s.content == nil {
+		http.NotFound(writer, request)
+		return
+	}
+	eventPath := strings.TrimPrefix(request.URL.Path, "/branding")
+	loader, ok := s.events[eventPath]
+	if !ok {
+		http.NotFound(writer, request)
+		return
+	}
+	config, _ := loader()
+	if config.Conference.Logo == "" {
+		http.NotFound(writer, request)
+		return
+	}
+	writer.Header().Set("Cache-Control", "no-cache")
+	http.ServeFileFS(writer, request, s.content, config.Conference.Logo)
 }
 
 // Only shared presentation assets are public. Never expose a directory listing,

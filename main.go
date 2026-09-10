@@ -22,7 +22,13 @@ var assets embed.FS
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	events, err := loadEvents()
+	content, err := loadContentFS()
+	if err != nil {
+		logger.Error("could not load content", "error", err)
+		os.Exit(1)
+	}
+
+	events, err := loadEventFS(content)
 	if err != nil {
 		logger.Error("could not load events", "error", err)
 		os.Exit(1)
@@ -34,7 +40,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	handler, err := web.New(events, assets, staticFiles, logger)
+	handler, err := web.New(events, assets, staticFiles, logger, content)
 	if err != nil {
 		logger.Error("could not create web server", "error", err)
 		os.Exit(1)
