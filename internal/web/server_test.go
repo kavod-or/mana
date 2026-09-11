@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -168,6 +169,31 @@ func TestCustomBrandingLogo(t *testing.T) {
 	handler.ServeHTTP(nonImage, httptest.NewRequest(http.MethodGet, "/branding/test", nil))
 	if nonImage.Code != http.StatusNotFound || strings.Contains(nonImage.Body.String(), "private server data") {
 		t.Fatal("non-image content was exposed through the branding endpoint")
+	}
+}
+
+func TestSeriousModeRenders(t *testing.T) {
+	for _, test := range []struct {
+		name        string
+		seriousMode bool
+	}{
+		{name: "effects enabled"},
+		{name: "serious mode", seriousMode: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			config := menu.Config{Conference: menu.Conference{SeriousMode: test.seriousMode}}
+			handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			response := httptest.NewRecorder()
+			handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/test", nil))
+			body := response.Body.String()
+			attribute := `data-serious-mode="` + strconv.FormatBool(test.seriousMode) + `"`
+			if !strings.Contains(body, attribute) {
+				t.Errorf("missing %s", attribute)
+			}
+		})
 	}
 }
 

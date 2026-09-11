@@ -142,7 +142,7 @@
   }
 }
 
-.girly-vibes .girly-message { cursor: pointer; font-family: inherit; }
+.girly-vibes button.girly-message { cursor: pointer; font-family: inherit; }
 
 .heart-challenge {
   width: 100vw;

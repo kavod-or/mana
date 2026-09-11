@@ -66,6 +66,17 @@ conference:
 
 The image is served only through that event's branding URL. Paths must remain inside `content`; absolute paths, traversal, escaping symlinks, non-image data, and files larger than 5 MB are rejected. Omit `logo` to use the built-in Mana logo. With `CONTENT_DIR`, replacing the image or changing the setting takes effect on reload without rebuilding the application.
 
+## Optional event effects
+
+The hidden girly theme and its heart-rain challenge are controlled together by `conference.serious_mode`:
+
+```yaml
+conference:
+  serious_mode: true
+```
+
+Set `serious_mode: true` to disable both girly vibes and heart rain for the event. Set it to `false`, or omit it, to enable the existing combined hidden experience. Changes made through `CONTENT_DIR` take effect when the event page is reloaded.
+
 ## Local development
 
 Go 1.24 or newer is required.

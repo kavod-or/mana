@@ -27,12 +27,13 @@ type Config struct {
 }
 
 type Conference struct {
-	Payment   Localized `yaml:"payment"`
-	Languages []string  `yaml:"languages"`
-	TimeZone  string    `yaml:"timezone"`
-	Logo      string    `yaml:"logo"`
-	Name      Localized `yaml:"name"`
-	Location  Localized `yaml:"location"`
+	Payment     Localized `yaml:"payment"`
+	Languages   []string  `yaml:"languages"`
+	SeriousMode bool      `yaml:"serious_mode"`
+	TimeZone    string    `yaml:"timezone"`
+	Logo        string    `yaml:"logo"`
+	Name        Localized `yaml:"name"`
+	Location    Localized `yaml:"location"`
 }
 
 type Permanent struct {

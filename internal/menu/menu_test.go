@@ -105,6 +105,25 @@ func TestConferenceLogo(t *testing.T) {
 	}
 }
 
+func TestConferenceSeriousMode(t *testing.T) {
+	config, err := Decode(strings.NewReader(validMenu))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if config.Conference.SeriousMode {
+		t.Fatal("serious mode must default to false")
+	}
+
+	serious := strings.Replace(validMenu, "conference:", "conference:\n  serious_mode: true", 1)
+	config, err = Decode(strings.NewReader(serious))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !config.Conference.SeriousMode {
+		t.Fatal("serious mode was not enabled")
+	}
+}
+
 func TestValidateRejectsIncompleteTranslation(t *testing.T) {
 	config, err := Decode(strings.NewReader(strings.Replace(validMenu, "{de: Konferenz, en: Conference}", "{de: Konferenz}", 1)))
 	if err == nil {

@@ -159,6 +159,7 @@
 
 // A deliberate logo hold reveals the optional theme; no theme asset loads first.
 (() => {
+  if (document.body.dataset.seriousMode === 'true') return;
   const logo = document.querySelector('.brand');
   if (!logo) return;
   let timer;
@@ -182,7 +183,7 @@
     loading = true;
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = '/static/girly.css?v=7';
+    link.href = '/static/girly.css?v=8';
     link.onload = () => {
       loading = false;
       theme = link;
