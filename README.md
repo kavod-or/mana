@@ -68,14 +68,17 @@ The image is served only through that event's branding URL. Paths must remain in
 
 ## Optional event effects
 
-The hidden girly theme and its heart-rain challenge are controlled together by `conference.serious_mode`:
+Choose the hidden experience for each event with `conference.easter_egg_mode`:
 
 ```yaml
 conference:
-  serious_mode: true
+  serious_mode: false
+  easter_egg_mode: mazel_tov
 ```
 
-Set `serious_mode: true` to disable both girly vibes and heart rain for the event. Set it to `false`, or omit it, to enable the existing combined hidden experience. Changes made through `CONTENT_DIR` take effect when the event page is reloaded.
+The supported modes are `girly_vibes` and `mazel_tov`. The girly mode retains its heart-rain challenge. Mazel Tov mode first covers the page with shattered glass, then starts confetti and an animated “MAZEL TOV!” after two seconds. The complete Mazel Tov effect automatically disappears 30 seconds after activation. Both modes use the same three-second logo hold, and another hold turns an active effect off early.
+
+Set `serious_mode: true` to disable the selected easter egg entirely. When `easter_egg_mode` is omitted, Mana uses `girly_vibes` for backward compatibility. Changes made through `CONTENT_DIR` take effect when the event page is reloaded.
 
 ## Local development
 

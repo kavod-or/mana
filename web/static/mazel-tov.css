@@ -1,0 +1,61 @@
+.mazel-tov-glass,
+.mazel-tov-confetti,
+.mazel-tov-message {
+  position: fixed;
+  pointer-events: none;
+}
+
+.mazel-tov-glass {
+  z-index: 10000;
+  inset: 0;
+  background: rgb(222 235 244 / 8%) url('/static/mazel-tov-glass.png?v=1') center / cover no-repeat;
+  backdrop-filter: saturate(0.75) contrast(1.08);
+  animation: glass-impact 260ms ease-out both;
+}
+
+.mazel-tov-confetti {
+  z-index: 10001;
+  inset: 0;
+  width: 100vw;
+  height: 100svh;
+}
+
+.mazel-tov-message {
+  z-index: 10002;
+  top: 50%;
+  left: 50%;
+  max-width: 95vw;
+  color: white;
+  font-family: "Avenir Next", Avenir, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: clamp(2.25rem, 13vw, 9rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+  text-align: center;
+  white-space: nowrap;
+  -webkit-text-stroke: clamp(1px, 0.25vw, 3px) #164f91;
+  text-shadow: 0 0.08em 0 #d49b00, 0 0.16em 0.35em rgb(0 0 0 / 45%);
+  animation: mazel-tov-dance 3.2s ease-in-out infinite alternate;
+}
+
+@keyframes glass-impact {
+  from { opacity: 0; transform: scale(1.035); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes mazel-tov-dance {
+  0% { transform: translate(-68%, -62%) rotate(-7deg) scale(0.88); }
+  48% { transform: translate(-38%, -42%) rotate(5deg) scale(1.08); }
+  100% { transform: translate(-62%, -36%) rotate(-3deg) scale(0.96); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mazel-tov-glass,
+  .mazel-tov-message {
+    animation: none;
+  }
+
+  .mazel-tov-message {
+    transform: translate(-50%, -50%);
+  }
+}

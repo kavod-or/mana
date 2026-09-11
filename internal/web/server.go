@@ -203,7 +203,7 @@ func (s *server) brandingLogo(writer http.ResponseWriter, request *http.Request)
 // source maps, or configuration files accidentally placed in the static folder.
 func (s *server) asset(writer http.ResponseWriter, request *http.Request) {
 	switch request.URL.Path {
-	case "/static/hearts.js", "/static/girly.css", "/static/manna.js", "/static/app.js", "/static/styles.css", "/static/logo.png", "/static/favicon.png":
+	case "/static/hearts.js", "/static/girly.css", "/static/mazel-tov.js", "/static/mazel-tov.css", "/static/mazel-tov-glass.png", "/static/manna.js", "/static/app.js", "/static/styles.css", "/static/logo.png", "/static/favicon.png":
 		cacheStatic(s.static).ServeHTTP(writer, request)
 	default:
 		writer.Header().Set("Cache-Control", "no-store")

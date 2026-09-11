@@ -11,7 +11,7 @@ test('theme is fetched only after a full hold and reused on subsequent toggles',
   vm.runInNewContext('// A deliberate logo hold'+source, {
     loadHearts: async () => { effectLoads++; return {startHearts: () => { starts++; return () => {stops++;}; }}; },
     document: {
-      body: {dataset: {seriousMode: 'false'}},
+      body: {dataset: {easterEggMode: 'girly_vibes'}},
       querySelector: (selector) => selector === '.brand' ? {addEventListener: (name, fn) => {handlers[name] = fn;}} : {after: (node) => {message = node;}},
       createElement: () => ({setAttribute() {}, remove() {}, addEventListener(name, fn) {this[name] = fn;}}),
       head: {append: (node) => {downloads++; link = node;}},
@@ -36,11 +36,11 @@ test('theme is fetched only after a full hold and reused on subsequent toggles',
   assert.ok(!fs.readFileSync('web/templates/index.html', 'utf8').includes('girly.css'));
 });
 
-test('serious mode disables girly vibes and heart rain together', () => {
+test('no easter egg mode disables girly vibes and heart rain together', () => {
   const source = fs.readFileSync('web/static/app.js', 'utf8').split('// A deliberate logo hold')[1];
   let queried = false;
   vm.runInNewContext('// A deliberate logo hold'+source, {
-    document: {body: {dataset: {seriousMode: 'true'}}, querySelector: () => {queried = true;}},
+    document: {body: {dataset: {easterEggMode: 'none'}}, querySelector: () => {queried = true;}},
   });
   assert.equal(queried, false);
 });

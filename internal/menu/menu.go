@@ -27,13 +27,14 @@ type Config struct {
 }
 
 type Conference struct {
-	Payment     Localized `yaml:"payment"`
-	Languages   []string  `yaml:"languages"`
-	SeriousMode bool      `yaml:"serious_mode"`
-	TimeZone    string    `yaml:"timezone"`
-	Logo        string    `yaml:"logo"`
-	Name        Localized `yaml:"name"`
-	Location    Localized `yaml:"location"`
+	Payment       Localized `yaml:"payment"`
+	Languages     []string  `yaml:"languages"`
+	SeriousMode   bool      `yaml:"serious_mode"`
+	EasterEggMode string    `yaml:"easter_egg_mode"`
+	TimeZone      string    `yaml:"timezone"`
+	Logo          string    `yaml:"logo"`
+	Name          Localized `yaml:"name"`
+	Location      Localized `yaml:"location"`
 }
 
 type Permanent struct {
@@ -125,6 +126,9 @@ func (config Config) Validate() error {
 		return err
 	}
 	if err := validateLogo(config.Conference.Logo); err != nil {
+		return err
+	}
+	if err := validateEasterEggMode(config.Conference.EasterEggMode); err != nil {
 		return err
 	}
 	for id, label := range config.Tags {
@@ -317,6 +321,25 @@ func (conference Conference) Zone() string {
 		return "Europe/Berlin"
 	}
 	return conference.TimeZone
+}
+
+func (conference Conference) EffectiveEasterEggMode() string {
+	if conference.SeriousMode {
+		return "none"
+	}
+	if conference.EasterEggMode == "" {
+		return "girly_vibes"
+	}
+	return conference.EasterEggMode
+}
+
+func validateEasterEggMode(mode string) error {
+	switch mode {
+	case "", "girly_vibes", "mazel_tov":
+		return nil
+	default:
+		return fmt.Errorf("conference.easter_egg_mode must be girly_vibes or mazel_tov")
+	}
 }
 
 var languagePattern = regexp.MustCompile(`^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$`)

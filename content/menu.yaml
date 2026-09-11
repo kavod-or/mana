@@ -5,6 +5,7 @@ conference:
   # Add language codes here and provide each translation throughout this file.
   languages: [de, en, ru]
   serious_mode: false
+  easter_egg_mode: mazel_tov
   # Set this to an image in the content directory, for example: example-conference-logo.png
   logo: ""
   # Optional payment notice (requires every configured language):

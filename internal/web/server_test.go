@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strconv"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -172,16 +171,19 @@ func TestCustomBrandingLogo(t *testing.T) {
 	}
 }
 
-func TestSeriousModeRenders(t *testing.T) {
+func TestEasterEggModeRenders(t *testing.T) {
 	for _, test := range []struct {
 		name        string
 		seriousMode bool
+		mode        string
+		want        string
 	}{
-		{name: "effects enabled"},
-		{name: "serious mode", seriousMode: true},
+		{name: "default", want: "girly_vibes"},
+		{name: "mazel tov", mode: "mazel_tov", want: "mazel_tov"},
+		{name: "serious mode", seriousMode: true, mode: "mazel_tov", want: "none"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			config := menu.Config{Conference: menu.Conference{SeriousMode: test.seriousMode}}
+			config := menu.Config{Conference: menu.Conference{SeriousMode: test.seriousMode, EasterEggMode: test.mode}}
 			handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
 			if err != nil {
 				t.Fatal(err)
@@ -189,7 +191,7 @@ func TestSeriousModeRenders(t *testing.T) {
 			response := httptest.NewRecorder()
 			handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/test", nil))
 			body := response.Body.String()
-			attribute := `data-serious-mode="` + strconv.FormatBool(test.seriousMode) + `"`
+			attribute := `data-easter-egg-mode="` + test.want + `"`
 			if !strings.Contains(body, attribute) {
 				t.Errorf("missing %s", attribute)
 			}
@@ -457,7 +459,7 @@ func TestClientDoesNotExposeOtherEvents(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, path := range []string{"/", "/missing", "/private-alpha", "/private-beta", "/static/app.js", "/static/manna.js", "/static/styles.css", "/static/logo.png", "/static/favicon.png"} {
+	for _, path := range []string{"/", "/missing", "/private-alpha", "/private-beta", "/static/app.js", "/static/manna.js", "/static/mazel-tov.js", "/static/mazel-tov.css", "/static/mazel-tov-glass.png", "/static/styles.css", "/static/logo.png", "/static/favicon.png"} {
 		for _, encoding := range []string{"", "gzip"} {
 			request := httptest.NewRequest("GET", path, nil)
 			request.Header.Set("Accept-Encoding", encoding)

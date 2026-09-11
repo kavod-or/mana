@@ -113,6 +113,9 @@ func TestConferenceSeriousMode(t *testing.T) {
 	if config.Conference.SeriousMode {
 		t.Fatal("serious mode must default to false")
 	}
+	if got := config.Conference.EffectiveEasterEggMode(); got != "girly_vibes" {
+		t.Fatalf("default easter egg mode = %q", got)
+	}
 
 	serious := strings.Replace(validMenu, "conference:", "conference:\n  serious_mode: true", 1)
 	config, err = Decode(strings.NewReader(serious))
@@ -121,6 +124,23 @@ func TestConferenceSeriousMode(t *testing.T) {
 	}
 	if !config.Conference.SeriousMode {
 		t.Fatal("serious mode was not enabled")
+	}
+	if got := config.Conference.EffectiveEasterEggMode(); got != "none" {
+		t.Fatalf("serious easter egg mode = %q", got)
+	}
+
+	mazelTov := strings.Replace(validMenu, "conference:", "conference:\n  easter_egg_mode: mazel_tov", 1)
+	config, err = Decode(strings.NewReader(mazelTov))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := config.Conference.EffectiveEasterEggMode(); got != "mazel_tov" {
+		t.Fatalf("configured easter egg mode = %q", got)
+	}
+
+	invalid := strings.Replace(validMenu, "conference:", "conference:\n  easter_egg_mode: surprise", 1)
+	if _, err := Decode(strings.NewReader(invalid)); err == nil {
+		t.Fatal("accepted an unknown easter egg mode")
 	}
 }
 
