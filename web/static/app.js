@@ -211,7 +211,7 @@
       loading = true;
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = '/static/girly.css?v=8';
+      link.href = '/static/girly.css?v=9';
       link.onload = () => {
         loading = false;
         theme = link;

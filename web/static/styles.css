@@ -435,9 +435,7 @@ a:focus-visible {
 }
 
 .timeline-dishes > div {
-  padding: 0.9rem 1rem;
-  border-radius: 0.9rem;
-  background: rgb(255 253 248 / 63%);
+  padding: 0.15rem 0;
 }
 
 .timeline-dishes strong,

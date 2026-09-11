@@ -8,7 +8,7 @@ const notFoundPage = `<!doctype html>
   <meta name="robots" content="noindex">
   <title>404 · Mana</title>
   <link rel="icon" href="/static/favicon.png?v=2" type="image/png">
-  <link rel="stylesheet" href="/static/styles.css?v=26">
+  <link rel="stylesheet" href="/static/styles.css?v=27">
 </head>
 <body class="landing-page">
   <main class="notice-card">

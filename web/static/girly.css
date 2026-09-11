@@ -50,7 +50,6 @@
 .girly-vibes .food-truck-card { border: 2px solid #ef91d7; background: #fff0fc; box-shadow: var(--shadow); }
 .girly-vibes .day-switcher button[aria-pressed='true'],
 .girly-vibes .language-switch button[aria-pressed='true'] { background: #a00083; }
-.girly-vibes .timeline-dishes > div { background: #ffedfa; }
 .girly-vibes .sold-out { background: #ffddf2; color: #9a005e; }
 
 /* Two lightweight glitter layers sit behind the menu, never over its controls. */
