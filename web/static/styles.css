@@ -456,6 +456,11 @@ a:focus-visible {
 }
 
 footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.25rem;
   padding: 1.5rem 0 2.5rem;
   border-top: 1px solid var(--line);
   color: var(--muted);
@@ -743,17 +748,12 @@ footer {
 }
 
 .notice-footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.25rem 1rem;
   width: min(100%, 32rem);
   padding-bottom: 0;
 }
 
-.notice-footer .app-version,
-.notice-footer .github-link {
+footer .app-version,
+footer .github-link {
   display: inline-flex;
   align-items: center;
   margin: 0;
@@ -828,14 +828,22 @@ footer {
 }
 
 .github-link {
-  display: block;
-  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
   min-height: 2.75rem;
   margin: 0.5rem auto 0;
-  padding: 0.65rem 0.9rem;
+  padding: 0.65rem;
   border-radius: 0.5rem;
   color: inherit;
-  text-underline-offset: 0.2em;
+}
+
+.github-link svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: currentcolor;
 }
 
 .github-link:hover {

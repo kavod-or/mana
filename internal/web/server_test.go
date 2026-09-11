@@ -348,6 +348,22 @@ func TestSoldOutRendering(t *testing.T) {
 	}
 }
 
+func TestMenuFooterOrder(t *testing.T) {
+	handler, err := newTestServer(func() (menu.Config, error) { return menu.Config{}, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/test", nil))
+	body := response.Body.String()
+	meal := strings.Index(body, "Guten Appetit!")
+	poweredBy := strings.Index(body, "Powered by Mana v")
+	github := strings.Index(body, `class="github-link"`)
+	if meal < 0 || poweredBy < meal || github < poweredBy {
+		t.Fatal("footer items are not ordered meal, powered by, GitHub")
+	}
+}
+
 func TestEmptyRefreshmentsHidden(t *testing.T) {
 	config := menu.Config{Days: []menu.Day{{Services: []menu.Service{{}}}}}
 	handler, err := newTestServer(func() (menu.Config, error) { return config, nil }, os.DirFS("../.."), fstest.MapFS{}, slog.New(slog.NewTextHandler(io.Discard, nil)))
@@ -382,7 +398,7 @@ func TestEventRouting(t *testing.T) {
 		handler.ServeHTTP(response, httptest.NewRequest("GET", path, nil))
 		switch path {
 		case "/":
-			if response.Code != 200 || !strings.Contains(response.Body.String(), "Please scan the QR code") || !strings.Contains(response.Body.String(), "Powered by Mana v") || !strings.Contains(response.Body.String(), "GitHub ↗") || strings.Contains(response.Body.String(), "alpha") {
+			if response.Code != 200 || !strings.Contains(response.Body.String(), "Please scan the QR code") || !strings.Contains(response.Body.String(), "Powered by Mana v") || !strings.Contains(response.Body.String(), `target="_blank" rel="noopener noreferrer" aria-label="Mana on GitHub"`) || strings.Contains(response.Body.String(), "GitHub ↗") || strings.Contains(response.Body.String(), "alpha") {
 				t.Fatal("incorrect landing page")
 			}
 		case "/alpha", "/beta":
@@ -441,10 +457,13 @@ func TestNotFoundPage(t *testing.T) {
 	if response.Header().Get("Content-Type") != "text/html; charset=utf-8" {
 		t.Fatal("expected HTML")
 	}
-	for _, text := range []string{"Hier ist noch nicht gedeckt.", "This page couldn’t be found.", "QR-Code", "Powered by Mana v", "GitHub ↗"} {
+	for _, text := range []string{"Hier ist noch nicht gedeckt.", "This page couldn’t be found.", "QR-Code", "Powered by Mana v", `target="_blank" rel="noopener noreferrer" aria-label="Mana on GitHub"`} {
 		if !strings.Contains(response.Body.String(), text) {
 			t.Errorf("missing %q", text)
 		}
+	}
+	if strings.Contains(response.Body.String(), "GitHub ↗") {
+		t.Error("GitHub link should render as an icon without visible text")
 	}
 }
 
